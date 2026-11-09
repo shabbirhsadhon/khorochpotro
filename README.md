@@ -1,34 +1,35 @@
-# খরচপত্র মাল্টি-ইউজার (Khorochpotro Multi-User)
+# খরচপত্র
 
-প্রতিদিনের আয়-খরচের হিসাবের অ্যাপ — ইমেইল + পাসওয়ার্ড দিয়ে লগইন,
-প্রত্যেক ব্যবহারকারীর হিসাব সম্পূর্ণ আলাদা। ভয়েস (বাংলা) দিয়ে
-এন্ট্রি, মাসিক বাজেট, ক্যাটাগরি ডোনাট, PDF রিপোর্ট, CSV
-ইমপোর্ট/এক্সপোর্ট, আর GitHub-এ এনক্রিপ্টেড (AES-256-GCM) ব্যাকআপ।
+Bangla daily expense tracker for one person. No login, no server — everything
+stays on your device.
 
-## গঠন
+## What it does
+- Add entries by typing or by Bangla voice (offline Whisper; the model
+  downloads once, then works without net). Every voice entry shows a
+  preview first — amount, type (খরচ / জমা-আয়) and category — and you can
+  fix it before tapping "অ্যাড করুন".
+- Monthly income, expense and balance, category-wise expense, monthly
+  budget with a progress bar.
+- Add / edit / delete entries, search and filter, period previews with
+  interactive donuts, month-stepper navigation.
+- Monthly PDF report, CSV export and import.
+- Encrypted GitHub backup (entries + monthly budget): AES-GCM encrypted
+  on the device with your passphrase, auto-backup after every change,
+  restore from "ব্যাকআপ থেকে আনুন". The GitHub token and passphrase never
+  leave your device — the repo only holds ciphertext.
+- Bangla number words, paisa-integer maths, Atma + Hind Siliguri fonts
+  bundled.
 
-- `client/` — React + TypeScript ফ্রন্টএন্ড (`client/src/App.tsx`,
-  `client/src/theme.css`, ফন্ট `client/src/assets/fonts/`)
-- `server/` — সার্ভার অ্যাকশন ও ডেটাবেজ স্কিমা
-  (`server/src/actions.ts`, `server/src/schema.ts`,
-  `server/src/privileged.ts` — পাসওয়ার্ড হ্যাশিং ও সোর্স-আর্কাইভের
-  মতো হোস্ট-ক্ষমতার কাজ)
-- `drizzle/` — SQLite মাইগ্রেশন
-- `space.json` — Muse ওয়েব-আর্টিফ্যাক্টের মেটাডেটা
+## Use it
+- Website: https://shabbirhsadhon.github.io/khorochpotro/ (GitHub Pages)
+- Android: build from the Pages URL with WebIntoApp.
+- Data lives in the browser (localStorage). There is no account — the app
+  opens straight into your ledger.
 
-## চালানো / বিল্ড
+## Files
+- `index.html` — the whole app in one file
+- `model/parser-model.json` — voice parser rules (v3); the "মডেল আপডেট"
+  button checks this file on GitHub for newer rules
 
-এই প্রজেক্ট Muse ওয়েব-আর্টিফ্যাক্ট রানটাইমে
-(`@hatch/space-sdk`) চলে।
-
-```sh
-bun install
-bun run typecheck
-bun run build
-```
-
-## ডেটা সুরক্ষা
-
-ব্যবহারকারীর ডেটাবেজ (`app.db`) এই আর্কাইভে নেই এবং Git-এও ওঠা
-উচিত নয় — `.gitignore`-এ বাদ দেওয়া আছে। পাসওয়ার্ড সার্ভারে শুধু
-সল্টেড PBKDF2-SHA256 হ্যাশ হিসেবে থাকে।
+## Security
+See SECURITY.md. Never commit tokens, passphrases or unencrypted backups.
