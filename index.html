@@ -923,6 +923,52 @@
       #entryList::-webkit-scrollbar { width: 5px; }
       #entryList::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
 
+      /* ---------- ডেস্কটপ সাজানো: শুধু বড় পর্দা (≥960px) ----------
+         ফোনের সাজানো হুবহু আগের মতোই থাকে — নিচের প্রতিটা নিয়ম
+         min-width মিডিয়া কোয়েরির ভেতরে, তাই ছোট পর্দায়
+         কোনোটাই প্রযোজ্য হয় না। */
+
+      /* মাইক FAB ডেস্কটপেও দেখা যাবে: ল্যাপটপে সিঙ্কের টিক/ক্রস
+         এই বোতামের মুখেই আসে, তাই ওপরে থাকা লুকানোর নিয়মটা
+         এখানে বাতিল করা হলো */
+      @media (min-width: 960px) {
+        .fab { display: flex; }
+      }
+
+      /* দুই কলাম (960–1247px): ইতিহাসের কার্ডটা ডান কলামের পুরো
+         উচ্চতা জুড়ে টানা থাকে — কার্ডের নিচে পেজের পেছনের
+         বড় ফাঁকা জায়গাটা থাকে না */
+      @media (min-width: 960px) and (max-width: 1247.98px) {
+        .grid { align-items: stretch; }
+        .grid > .stack:last-child { grid-template-rows: minmax(0, 1fr); }
+      }
+
+      /* তিন কলাম (≥1248px): দুই স্ট্যাকের মোড়ক সরিয়ে (display: contents)
+         প্যানেলগুলো সরাসরি গ্রিডে বসে — বামে কণ্ঠের প্যানেল,
+         মাঝে ইতিহাস, ডানে হাতে-এন্ট্রির ফর্ম আর তার নিচে বাজেট।
+         নিচের ফর্ম আর বাজেট ওপরে উঠে আসায় ডানদিকের বড়
+         ফাঁকা জায়গাটা ভরে যায়, পেজের উচ্চতাও কমে আসে */
+      @media (min-width: 1248px) {
+        .grid {
+          grid-template-columns: 400px minmax(0, 1fr) 380px;
+          grid-template-areas:
+            "voice history form"
+            "voice history budget";
+          align-items: stretch;
+        }
+        .grid > .stack { display: contents; }
+        .voice-panel { grid-area: voice; }
+        .history-panel { grid-area: history; }
+        #entryFormPanel { grid-area: form; }
+        .budget-panel { grid-area: budget; }
+      }
+
+      /* আরও বড় পর্দায় কনটেইনার আরেকটু চওড়া, যাতে প্রস্থটা
+         কাজে লাগে আর দুই পাশে বড় ফাঁক না থাকে */
+      @media (min-width: 1400px) {
+        .wrap { max-width: 1340px; }
+      }
+
     </style>
   </head>
   <body>
@@ -1076,7 +1122,7 @@
           </section>
 
           <!-- Budget -->
-          <section class="card panel" aria-label="মাসিক বাজেট">
+          <section class="card panel budget-panel" aria-label="মাসিক বাজেট">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
               মাসিক বাজেট
@@ -1101,7 +1147,7 @@
         <!-- Right column -->
         <div class="stack">
           <!-- History -->
-          <section class="card panel" aria-label="হিসাবের ইতিহাস">
+          <section class="card panel history-panel" aria-label="হিসাবের ইতিহাস">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
               হিসাবের ইতিহাস
