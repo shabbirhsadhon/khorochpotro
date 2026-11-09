@@ -1085,7 +1085,6 @@
           <div>
             <div class="lbl">মোট ব্যালান্স (সব সময়ের)</div>
             <div class="big" id="balanceVal">৳ ০</div>
-            <div class="sub" id="balanceSub">মোট জমা থেকে মোট খরচ বাদ দিয়ে</div>
           </div>
           <div class="balance-side">
             <div class="balance-chip"><div class="c-lbl">মোট জমা</div><div class="c-val" id="totalIncomeVal">৳ ০</div></div>
@@ -1518,7 +1517,7 @@
     /* ---------- ডোম রেফারেন্স ---------- */
     function $(id) { return document.getElementById(id); }
     var els = {};
-    ['todayLine', 'monthInput', 'monthPrevBtn', 'monthNextBtn', 'pdfBtn', 'balanceVal', 'balanceSub', 'totalIncomeVal', 'totalExpenseVal',
+    ['todayLine', 'monthInput', 'monthPrevBtn', 'monthNextBtn', 'pdfBtn', 'balanceVal', 'totalIncomeVal', 'totalExpenseVal',
      'todayExpenseVal', 'todayIncomeLine', 'weekExpenseVal', 'weekIncomeLine', 'monthExpenseLbl', 'monthExpenseVal',
      'statToday', 'statWeek', 'statMonth', 'periodModal', 'periodModalTitle', 'periodModalSub', 'periodModalTotal',
      'periodModalBody', 'periodModalEntries', 'periodModalClose',
@@ -2605,7 +2604,6 @@
       els.balanceVal.textContent = fmtMoney(inc - exp);
       els.totalIncomeVal.textContent = fmtMoney(inc);
       els.totalExpenseVal.textContent = fmtMoney(exp);
-      els.balanceSub.textContent = bnInt(all.length) + 'টি এন্ট্রি';
 
       var t = todayStr();
       var todayList = filterBy(all, function (e) { return e.date === t; });
