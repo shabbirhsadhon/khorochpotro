@@ -477,6 +477,66 @@
       @media (max-width: 480px) { .vp-edit .vp-row { grid-template-columns: 1fr; } }
       .vp-edit .vp-err { display: none; color: var(--expense); font-size: 13.5px; font-weight: 500; }
       .vp-edit .vp-err.show { display: block; }
+
+      /* ---------- কাস্টম ক্যালেন্ডার (তারিখ বাছাই) ----------
+         অ্যান্ড্রয়েডের ডিফল্ট ডেট-পিকারের বদলে অ্যাপের নিজের থিমের
+         ক্যালেন্ডার: গাঢ় সবুজ থিম, বাংলা মাসের নাম, Atma ফন্ট।
+         তারিখের ঘরটা শুধু-পড়ার টেক্সট — চাপলেই এই পপআপ খোলে। */
+      .date-field {
+        cursor: pointer; caret-color: transparent; padding-right: 40px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b6e4f' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3.5' y='5' width='17' height='16' rx='3'/%3E%3Cpath d='M3.5 10h17M8 3v4M16 3v4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 12px center; background-size: 19px 19px;
+      }
+      @media (prefers-color-scheme: dark) {
+        .date-field {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234ade9e' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3.5' y='5' width='17' height='16' rx='3'/%3E%3Cpath d='M3.5 10h17M8 3v4M16 3v4'/%3E%3C/svg%3E");
+        }
+      }
+      .cal-backdrop {
+        position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center;
+        padding: 18px; background: rgba(6, 22, 15, .55); opacity: 0; transition: opacity .22s ease;
+      }
+      .cal-backdrop[hidden] { display: none; }
+      .cal-backdrop.open { opacity: 1; }
+      .cal-panel {
+        width: min(352px, 100%); background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+        border-radius: 24px; box-shadow: var(--shadow-lg); padding: 20px 18px 16px;
+        transform: translateY(14px) scale(.97); opacity: 0;
+        transition: transform .26s cubic-bezier(.3, .9, .3, 1), opacity .22s ease;
+      }
+      .cal-backdrop.open .cal-panel { transform: none; opacity: 1; }
+      .cal-kicker { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+      .cal-title {
+        font-family: "Atma", "Noto Sans Bengali", "Hind Siliguri", sans-serif; font-weight: 600;
+        font-size: 25px; line-height: 1.3; color: var(--primary-strong); margin: 2px 0 10px;
+      }
+      .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+      .cal-month {
+        font-family: "Atma", "Noto Sans Bengali", "Hind Siliguri", sans-serif; font-weight: 600;
+        font-size: 19px; color: var(--ink);
+      }
+      .cal-nav-btn {
+        width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2);
+        color: var(--ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .cal-nav-btn svg { width: 19px; height: 19px; }
+      .cal-nav-btn:active { transform: scale(.94); }
+      .cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+      .cal-week span { text-align: center; font-size: 12.5px; font-weight: 600; color: var(--ink-3); padding: 4px 0; }
+      .cal-day {
+        border: 0; background: transparent; color: var(--ink); border-radius: 50%; aspect-ratio: 1 / 1;
+        font-family: "Atma", "Noto Sans Bengali", "Hind Siliguri", sans-serif; font-size: 16.5px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; padding: 0; -webkit-tap-highlight-color: transparent;
+      }
+      .cal-day:hover { background: var(--surface-2); }
+      .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--primary); color: var(--primary-strong); font-weight: 600; }
+      .cal-day.sel { background: var(--primary); color: var(--on-primary); font-weight: 600; box-shadow: var(--shadow-sm); }
+      .cal-blank { aspect-ratio: 1 / 1; }
+      .cal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+      @media (prefers-reduced-motion: reduce) {
+        .cal-backdrop, .cal-panel { transition: none; }
+      }
       .voice-notice {
         text-align: left; margin-top: 12px; border-radius: var(--radius-sm); padding: 13px 15px;
         font-size: 14.5px; line-height: 1.65; background: var(--amber-bg); color: var(--ink);
@@ -969,6 +1029,24 @@
         .wrap { max-width: 1340px; }
       }
 
+      /* ---------- পিডিএফ বোতাম: হেডার থেকে সরিয়ে ----------
+         মোবাইলে বোতামটা গিটহাব ব্যাকআপ অংশের ঠিক ওপরের সারিতে
+         থাকে (পুরো প্রস্থ জুড়ে); ডেস্কটপে (≥960px) স্ক্রিপ্ট
+         বোতামটাকে হিসাবের ইতিহাস কার্ডের ভেতরে CSV বোতামগুলোর
+         নিচের ফাঁকা জায়গায় বসিয়ে দেয়। */
+      .pdf-slot { margin-top: 14px; }
+      .pdf-slot #pdfBtn { width: 100%; justify-content: center; }
+      @media (min-width: 960px) {
+        .history-panel > #pdfBtn { margin-top: 12px; }
+
+        /* হেডার (শুধু ডেস্কটপে): নাম একপাশে, তারিখ+বার
+           আরেকপাশে — একই লাইনে। মোবাইলে আগের মতোই তারিখ
+           নামের নিচে থাকে (এই নিয়মগুলো শুধু ≥960px-এ)। */
+        header.top { align-items: baseline; }
+        header.top > div:first-child { display: contents; }
+        header.top .today-line { margin: 0; }
+      }
+
     </style>
   </head>
   <body>
@@ -977,12 +1055,6 @@
         <div>
           <h1>খরচপত্র</h1>
           <p class="today-line" id="todayLine"></p>
-        </div>
-        <div class="month-tools">
-          <button class="btn btn-primary" id="pdfBtn" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            মাসিক প্রতিবেদন (পিডিএফ)
-          </button>
         </div>
         <!-- সিঙ্কের অবস্থা আলাদা চিপে নয় — নিচের মাইক বোতামেই টিক/ক্রস হয়ে দেখায় -->
       </header>
@@ -1107,7 +1179,7 @@
                 </div>
                 <div class="field">
                   <label for="dateInput">তারিখ</label>
-                  <input id="dateInput" type="date" />
+                  <input id="dateInput" type="text" class="date-field" readonly aria-haspopup="dialog" />
                 </div>
               </div>
               <div class="field">
@@ -1190,6 +1262,16 @@
             </div>
           </section>
         </div>
+      </div>
+
+      <!-- মাসিক পিডিএফ বোতাম: মোবাইলে এখানে — গিটহাব ব্যাকআপের
+           ঠিক ওপরে; ডেস্কটপে (≥960px) স্ক্রিপ্ট বোতামটাকে
+           হিসাবের ইতিহাস কার্ডে CSV বোতামগুলোর নিচে সরিয়ে নেয় -->
+      <div class="pdf-slot" id="pdfSlotMobile">
+        <button class="btn btn-primary" id="pdfBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          মাসিক প্রতিবেদন (পিডিএফ)
+        </button>
       </div>
 
       <!-- GitHub backup — কমপ্যাক্ট: শুধু ইনপুট, সংরক্ষণ আর এক লাইনের অবস্থা -->
@@ -2865,7 +2947,16 @@
        ভুল শোনা গেলে ভুল এন্ট্রি বসার সুযোগই থাকে না। */
     var pendingVoice = null;
     function handleVoiceResult(text) {
-      var r = parseVoiceText(text);
+      // পার্স করার আগে এই ডিভাইসের শেখা সংশোধন দিয়ে লাইনটা ঠিক
+      // করে নেওয়া হয় — ভুল শোনা শব্দ ঠিক হয়, আর জানা বাক্যের
+      // ধরনের সঙ্গে মিললে পুরো লাইনটাই প্রেডিক্ট হয়ে আসে।
+      // অফলাইন Whisper আর অনলাইন রিকগনিশন — দুটো পথই এখান দিয়ে
+      // যায়, তাই অনলাইনে থাকলেও শেখাটা একইভাবে কাজ করে।
+      var heardText = String(text || '');
+      var correctedText = applyLearning(heardText);
+      var r = parseVoiceText(correctedText);
+      r.heard = heardText; // আসল শোনা লাইন — “ঠিক করুন”-এ শেখার জন্য লাগে
+      if (correctedText) els.voiceLiveText.textContent = correctedText;
       els.voiceDetected.classList.add('show');
       if (r.poisha == null) {
         pendingVoice = null;
@@ -3016,6 +3107,25 @@
       var edit = document.createElement('div');
       edit.className = 'vp-edit';
 
+      // লাইন: যা বলতে চেয়েছিলেন — ভুল শোনা লাইনটা এখানে ঠিক করে
+      // দিলেই অ্যাপ সেটা শিখে রাখে (এই ডিভাইসেই); পরের বার একই
+      // ভুল শোনা গেলে নিজে থেকেই ঠিক করে দেখায়।
+      var lineWrap = document.createElement('div');
+      var lineLbl = document.createElement('label');
+      lineLbl.textContent = 'আপনি যা বলতে চেয়েছিলেন';
+      var lineInput = document.createElement('input');
+      lineInput.type = 'text';
+      lineInput.setAttribute('autocomplete', 'off');
+      lineInput.setAttribute('maxlength', '220');
+      lineInput.value = r.raw;
+      lineWrap.appendChild(lineLbl);
+      lineWrap.appendChild(lineInput);
+      var lineHint = document.createElement('p');
+      lineHint.className = 'vp-note';
+      lineHint.textContent = 'লাইনটা ঠিক করে দিলে অ্যাপ শিখে রাখবে — পরের বার একই কথা ভুল শুনলেও নিজে থেকেই ঠিক করে দেবে।';
+      lineWrap.appendChild(lineHint);
+      edit.appendChild(lineWrap);
+
       var curType = r.type;
 
       // ধরন: জমা / খরচ
@@ -3096,8 +3206,8 @@
       var dateLbl = document.createElement('label');
       dateLbl.textContent = 'তারিখ';
       var vpDateInput = document.createElement('input');
-      vpDateInput.type = 'date';
-      vpDateInput.value = r.date || todayStr();
+      vpDateInput.type = 'text';
+      makeDateField(vpDateInput, r.date || todayStr());
       dateWrap.appendChild(dateLbl);
       dateWrap.appendChild(vpDateInput);
       edit.appendChild(dateWrap);
@@ -3130,8 +3240,19 @@
         r.type = curType;
         r.category = catSel.value;
         r.date = vpDateInput.value;
+        // শেখা: লাইনটা ঠিক করে থাকলে সেই সংশোধন লার্নিং স্টোরে
+        // জমা হয় — পরের বার থেকে নিজে থেকেই ঠিক হয়ে আসবে।
+        // বিবরণ বদলে থাকলেও সেখান থেকে শব্দ-সংশোধন শেখা হয়।
+        var fixedLine = lineInput.value.trim();
+        if (fixedLine && fixedLine !== r.raw) {
+          learnFromPair(r.heard || r.raw, fixedLine);
+          r.raw = fixedLine;
+        }
         var d = descInput.value.trim();
-        if (d) r.desc = d;
+        if (d && d !== r.desc) {
+          learnFromDescEdit(r.heard || r.raw, r.desc, d);
+          r.desc = d;
+        }
         pendingVoice = r;
         showVoicePreview(r);
         showToast('প্রিভিউ ঠিক করা হয়েছে — এখন “অ্যাড করুন” চাপলেই বসবে');
@@ -3494,6 +3615,459 @@
     }
     renderExamples();
 
+    /* === VOICE-LEARN-BEGIN === */
+    /* ============================================================
+       ভয়েস লার্নিং — ট্রেইনিং শুধু এই ডিভাইসেই, অফলাইনে
+       ইউজার ভয়েস প্রিভিউতে "ঠিক করুন" দিয়ে লাইন/বিবরণ ঠিক
+       করলেই সেই সংশোধন এখানে জমা হয়: (১) শব্দ-সংশোধন — ভুল
+       শোনা শব্দ -> আসল শব্দ, (২) পুরো লাইনের সংশোধন — যেমন
+       শোনা গেছে -> যা বলতে চেয়েছিলেন, (৩) জানা বাক্যের ধরন —
+       শেখা লাইনগুলো আর শুরুতে পার্সারের উদাহরণ বাক্যগুলো (সিড)।
+       ভয়েস থেকে লেখা এলে (অফলাইন Whisper হোক বা অনলাইন
+       রিকগনিশন হোক) পার্স করার আগে applyLearning দিয়ে লাইনটা
+       ঠিক করা হয়: জানা লাইন হুবহু মিললে পুরোটা, বাক্যের ধরন
+       মিললে সংখ্যা অপরিবর্তিত রেখে পুরো লাইনটাই প্রেডিক্ট হয়,
+       নইলে শেখা শব্দগুলো শব্দে শব্দে ঠিক হয়।
+       স্টোরটা থাকে এই ডিভাইসের localStorage-এই — প্লেইন টেক্সটে
+       কোনো সার্ভারে যায় না। ডিভাইস বদলালে যাতে হারিয়ে না যায়,
+       তাই এটা এনক্রিপ্টেড গিটহাব ব্যাকআপের ভেতরে (এনক্রিপ্ট করা
+       অংশে) থাকে — পাসফ্রেজ ছাড়া পড়া যায় না, আর নতুন ডিভাইসে
+       ব্যাকআপ রিস্টোর হলে লার্নিংটাও ফিরে আসে।
+       ============================================================ */
+    var LEARN_KEY = 'khorochpotro_voice_learning_v1';
+    var LEARN_MAX_WORDS = 300;
+    var LEARN_MAX_LINES = 150;
+    var LEARN_WORD_MAXLEN = 60;
+    var LEARN_LINE_MAXLEN = 220;
+
+    function learnEmptyStore() { return { v: 1, words: [], lines: [] }; }
+    // স্টোরের গঠন: words: [[ভুল শব্দ, ঠিক শব্দ, সময়], ...],
+    // lines: [[শোনা লাইনের চাবি, ঠিক লাইন, সময়], ...] — সময়ের
+    // ছাপ দুটো ডিভাইসের স্টোর মেলানোর সময় নতুনটাকে জেতায়।
+    function sanitizeLearning(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+      var words = [], lines = [], i, w, l;
+      if (Array.isArray(raw.words)) {
+        for (i = 0; i < raw.words.length; i++) {
+          w = raw.words[i];
+          if (Array.isArray(w) && typeof w[0] === 'string' && typeof w[1] === 'string' &&
+              w[0] && w[1] && w[0] !== w[1]) {
+            words.push([w[0].slice(0, LEARN_WORD_MAXLEN), w[1].slice(0, LEARN_WORD_MAXLEN), Math.round(+w[2]) || 0]);
+          }
+        }
+      }
+      if (Array.isArray(raw.lines)) {
+        for (i = 0; i < raw.lines.length; i++) {
+          l = raw.lines[i];
+          if (Array.isArray(l) && typeof l[0] === 'string' && typeof l[1] === 'string' && l[0] && l[1]) {
+            lines.push([l[0].slice(0, LEARN_LINE_MAXLEN * 2), l[1].slice(0, LEARN_LINE_MAXLEN), Math.round(+l[2]) || 0]);
+          }
+        }
+      }
+      if (!words.length && !lines.length) return null;
+      return { v: 1, words: words.slice(-LEARN_MAX_WORDS), lines: lines.slice(-LEARN_MAX_LINES) };
+    }
+    function loadLearnStore() {
+      try {
+        var raw = localStorage.getItem(LEARN_KEY);
+        if (raw) { var s = sanitizeLearning(JSON.parse(raw)); if (s) return s; }
+      } catch (e) {}
+      return learnEmptyStore();
+    }
+    var learnStore = loadLearnStore();
+    function saveLearnStore() {
+      try { localStorage.setItem(LEARN_KEY, JSON.stringify(learnStore)); } catch (e) {}
+    }
+    // ব্যাকআপে রাখার মতো পরিষ্কার অনুলিপি
+    function learnSnapshot() { return sanitizeLearning(learnStore) || learnEmptyStore(); }
+
+    var LEARN_PUNCT_RE = /[।,.!?;:"'“”‘’()\[\]]/g;
+    // লাইনকে কাঁচা টোকেন + মিল-খোঁজার টোকেন (যতিচিহ্ন ছাড়া,
+    // সংখ্যা এক রূপে) — দুটো তালিকার দৈর্ঘ্য সবসময় সমান থাকে
+    function learnTokenPair(text) {
+      var raw = String(text || '').split(/\s+/).filter(Boolean);
+      var norm = raw.map(function (t) { return normalizeDigits(t).replace(LEARN_PUNCT_RE, ''); });
+      return { raw: raw, norm: norm };
+    }
+    // সংখ্যার টোকেন কিনা — টাকার পরিমাণের অংশ। প্রেডিকশনে এই
+    // টোকেনগুলো কখনো বদলায় না, আর শব্দ-শেখাতেও এগুলো শেখা হয়
+    // না (এক লাইনে ভুল শোনা পরিমাণ অন্য লাইনের ঠিক পরিমাণকে
+    // বদলে দিলে ক্ষতি হত)।
+    function learnIsNumToken(t) {
+      if (!t) return false;
+      if (/^\d/.test(t)) return true;
+      if (Object.prototype.hasOwnProperty.call(WORD_NUM, t)) return true;
+      if (Object.prototype.hasOwnProperty.call(SPECIAL_NUM, t)) return true;
+      if (t === 'টাকা' || t === 'টাকায়' || t === 'শত' || t === 'শতক' || t === 'শ' || t === 'শো' ||
+          t === 'হাজার' || t === 'লাখ' || t === 'লক্ষ' || t === 'কোটি' ||
+          t === 'সাড়ে' || t === 'পৌনে' || t === 'সোয়া' || t === 'পয়সা') return true;
+      var sm = t.match(/^(.+?)(শো|শ|হাজার|লাখ|লক্ষ|কোটি)$/);
+      if (sm && (/^\d+$/.test(sm[1]) || Object.prototype.hasOwnProperty.call(WORD_NUM, sm[1]) ||
+                 Object.prototype.hasOwnProperty.call(SPECIAL_NUM, sm[1]) ||
+                 Object.prototype.hasOwnProperty.call(NUM_EXTRA_PREFIX, sm[1]))) return true;
+      return false;
+    }
+    // দুটো শব্দের অক্ষরগত দূরত্ব — ভুল শোনা শব্দ চেনার জন্য
+    // (রিকসা~রিকশা, টিউসন~টিউশন: দূরত্ব ১)।
+    function learnEditDistance(a, b) {
+      var x = String(a).split(''), y = String(b).split('');
+      var m = x.length, n = y.length;
+      if (Math.abs(m - n) > 2) return 99;
+      var prev = [], cur = [], i, j;
+      for (j = 0; j <= n; j++) prev.push(j);
+      for (i = 1; i <= m; i++) {
+        cur = [i];
+        for (j = 1; j <= n; j++) {
+          cur.push(Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x[i - 1] === y[j - 1] ? 0 : 1)));
+        }
+        prev = cur;
+      }
+      return prev[n];
+    }
+    // কাছাকাছি শব্দ কিনা: হুবহু এক, বা এক-দুই অক্ষরের এদিক-ওদিক।
+    // সম্পূর্ণ আলাদা শব্দ (বাসের বনাম রিকশা) কখনো কাছাকাছি নয় —
+    // তাই প্রেডিকশন অন্য বাক্যের শব্দ বদলে দিতে পারে না।
+    function learnTokensSimilar(a, b) {
+      if (a === b) return true;
+      var d = learnEditDistance(a, b);
+      return d <= 1 || (d <= 2 && Math.min(a.length, b.length) >= 6);
+    }
+    function applyLearningTo(text, store, seeds) {
+      var raw = String(text == null ? '' : text);
+      var trimmed = raw.trim().replace(/\s+/g, ' ');
+      if (!trimmed) return raw;
+      var words = (store && Array.isArray(store.words)) ? store.words : [];
+      var lines = (store && Array.isArray(store.lines)) ? store.lines : [];
+      var hp = learnTokenPair(trimmed);
+      var key = hp.norm.join(' ');
+      var i, j;
+      // ১) হুবহু জানা লাইন — আগে ঠিক এই শোনাটাই ঠিক করা হয়েছিল
+      for (i = lines.length - 1; i >= 0; i--) {
+        if (lines[i] && lines[i][0] === key) return String(lines[i][1]);
+      }
+      // ২) জানা বাক্যের ধরন: টোকেন সংখ্যা আর সংখ্যার অবস্থান
+      //    মিললে, আর বাকি শব্দগুলো হুবহু বা কাছাকাছি (এক-দুই
+      //    অক্ষরের ভুল শোনা) হলে পুরো লাইনটাই প্রেডিক্ট হয় —
+      //    সবচেয়ে কাছের ধরনটাই বেছে নেওয়া হয়। শোনা লাইনের
+      //    নিজের সংখ্যাগুলো হুবহু থাকে, টাকার পরিমাণ কখনো
+      //    প্রেডিকশনে বদলায় না; সম্পূর্ণ আলাদা শব্দ থাকলে
+      //    মিল ধরা হয় না, অন্য বাক্য বদলে যায় না।
+      var cands = [];
+      for (i = 0; i < lines.length; i++) if (lines[i] && lines[i][1]) cands.push(String(lines[i][1]));
+      if (Array.isArray(seeds)) for (i = 0; i < seeds.length; i++) cands.push(String(seeds[i]));
+      var best = null, bestScore = Infinity;
+      for (i = 0; i < cands.length; i++) {
+        var cp = learnTokenPair(cands[i]);
+        if (cp.norm.length !== hp.norm.length) continue;
+        var score = 0, okT = true;
+        for (j = 0; j < cp.norm.length; j++) {
+          var hNum = learnIsNumToken(hp.norm[j]), cNum = learnIsNumToken(cp.norm[j]);
+          if (hNum || cNum) {
+            if (hNum === cNum) continue;
+            // পরিমাণের শব্দটাই এক-অক্ষর ভুল শোনা গেলে (সত্তুর ≈
+            // সত্তর) শোনা টোকেনটা সংখ্যা হিসেবে চেনা যায় না, তবু
+            // ম্যাচ ভাঙে না — সিডের পরিমাণ-শব্দের সঙ্গে কাছাকাছি
+            // হলেই ওই জায়গায় মিল ধরা হয়, আর আউটপুটে সিডের ঠিক
+            // পরিমাণ-শব্দটাই বসে (শোনা আসল সংখ্যা থাকলে সেটা
+            // আগের মতোই অপরিবর্তিত থাকে)। উল্টোটা — শোনা টোকেন
+            // সংখ্যা কিন্তু সিডেরটা নয় — আগের মতোই মিল নয়।
+            if (hNum || !learnTokensSimilar(hp.norm[j], cp.norm[j])) { okT = false; break; }
+            score += learnEditDistance(hp.norm[j], cp.norm[j]);
+            continue;
+          }
+          if (hp.norm[j] === cp.norm[j]) continue;
+          if (!learnTokensSimilar(hp.norm[j], cp.norm[j])) { okT = false; break; }
+          score += learnEditDistance(hp.norm[j], cp.norm[j]);
+        }
+        if (okT && score > 0 && score < bestScore) { bestScore = score; best = cp; }
+      }
+      if (best) {
+        var out = [];
+        for (j = 0; j < best.norm.length; j++) {
+          out.push(learnIsNumToken(hp.norm[j]) ? hp.raw[j] : best.raw[j]);
+        }
+        return out.join(' ');
+      }
+      // ৩) শব্দে শব্দে সংশোধন — শেখা ভুল-শোনা শব্দগুলো ঠিক করা
+      if (words.length) {
+        var wmap = {};
+        for (i = 0; i < words.length; i++) if (words[i]) wmap[words[i][0]] = words[i][1];
+        var changedW = false;
+        var res = hp.raw.map(function (tok, idx) {
+          var rep = wmap[hp.norm[idx]];
+          if (rep != null && rep !== hp.norm[idx]) { changedW = true; return rep; }
+          return tok;
+        });
+        if (changedW) return res.join(' ');
+      }
+      return raw;
+    }
+    function applyLearning(text) {
+      try { return applyLearningTo(text, learnStore, EXAMPLES); }
+      catch (e) { return String(text == null ? '' : text); }
+    }
+    function learnUpsertWord(store, from, to, ts) {
+      for (var i = 0; i < store.words.length; i++) {
+        if (store.words[i][0] === from) { store.words.splice(i, 1); break; }
+      }
+      store.words.push([from, to, ts]);
+      while (store.words.length > LEARN_MAX_WORDS) store.words.shift();
+    }
+    function learnUpsertLine(store, key, intended, ts) {
+      for (var i = 0; i < store.lines.length; i++) {
+        if (store.lines[i][0] === key) { store.lines.splice(i, 1); break; }
+      }
+      store.lines.push([key, intended, ts]);
+      while (store.lines.length > LEARN_MAX_LINES) store.lines.shift();
+    }
+    // দুটো টোকেন-তালিকা মিলিয়ে বদলে-যাওয়া শব্দের জোড়া বের করা:
+    // দৈর্ঘ্য সমান হলে অবস্থান ধরে, নইলে LCS দিয়ে মিলিয়ে —
+    // মিলে যাওয়া শব্দের মাঝের বদলি অংশগুলো জোড়া হয়।
+    function learnAlignPairs(a, b) {
+      var pairs = [];
+      function pushPair(x, y) {
+        if (!x || !y || x === y) return;
+        if (learnIsNumToken(x) || learnIsNumToken(y)) return;
+        pairs.push([x, y]);
+      }
+      var i, j;
+      if (a.length === b.length) {
+        for (i = 0; i < a.length; i++) pushPair(a[i], b[i]);
+        return pairs;
+      }
+      var m = a.length, n = b.length;
+      var dp = [];
+      for (i = 0; i <= m; i++) { var rowArr = []; for (j = 0; j <= n; j++) rowArr.push(0); dp.push(rowArr); }
+      for (i = m - 1; i >= 0; i--) for (j = n - 1; j >= 0; j--) {
+        dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+      }
+      var dels = [], inss = [];
+      function flush() {
+        var kMax = Math.min(dels.length, inss.length);
+        for (var k = 0; k < kMax; k++) pushPair(dels[k], inss[k]);
+        dels = []; inss = [];
+      }
+      i = 0; j = 0;
+      while (i < m && j < n) {
+        if (a[i] === b[j]) { flush(); i++; j++; }
+        else if (dp[i + 1][j] >= dp[i][j + 1]) { dels.push(a[i]); i++; }
+        else { inss.push(b[j]); j++; }
+      }
+      while (i < m) { dels.push(a[i]); i++; }
+      while (j < n) { inss.push(b[j]); j++; }
+      flush();
+      return pairs;
+    }
+    // একটা সংশোধন থেকে শেখা: পুরো লাইনের ম্যাপিং + শব্দ-জোড়া।
+    // স্টোরে কিছু বদলালে true।
+    function learnIntoStore(store, heard, intended) {
+      if (!store || !Array.isArray(store.words) || !Array.isArray(store.lines)) return false;
+      var h = String(heard || '').trim(), it = String(intended || '').trim();
+      if (!h || !it) return false;
+      var hp = learnTokenPair(h), ip = learnTokenPair(it);
+      var hk = hp.norm.join(' '), ik = ip.norm.join(' ');
+      if (!hk || !ik || hk === ik) return false;
+      var now = Date.now();
+      learnUpsertLine(store, hk, it.slice(0, LEARN_LINE_MAXLEN), now);
+      var pairs = learnAlignPairs(hp.norm, ip.norm);
+      for (var i = 0; i < pairs.length; i++) learnUpsertWord(store, pairs[i][0], pairs[i][1], now);
+      return true;
+    }
+    function learnFromPair(heard, intended) {
+      try {
+        if (learnIntoStore(learnStore, heard, intended)) {
+          saveLearnStore();
+          noteLearningChanged();
+        }
+      } catch (e) {}
+    }
+    // বিবরণ ঠিক করা থেকেও শব্দ-সংশোধন শেখা হয় — তবে শুধু সেই
+    // শব্দগুলো, যেগুলো আসল শোনা লাইনেও ছিল।
+    function learnFromDescEdit(heard, oldDesc, newDesc) {
+      try {
+        var o = String(oldDesc || '').trim(), nw = String(newDesc || '').trim();
+        if (!o || !nw || o === nw) return;
+        var heardToks = learnTokenPair(heard || '').norm;
+        var pairs = learnAlignPairs(learnTokenPair(o).norm, learnTokenPair(nw).norm);
+        var changed = false, now = Date.now();
+        for (var i = 0; i < pairs.length; i++) {
+          if (heardToks.indexOf(pairs[i][0]) === -1) continue;
+          learnUpsertWord(learnStore, pairs[i][0], pairs[i][1], now);
+          changed = true;
+        }
+        if (changed) { saveLearnStore(); noteLearningChanged(); }
+      } catch (e) {}
+    }
+    // ব্যাকআপ থেকে আসা লার্নিং এখানকার স্টোরে মেলানো: নতুন এন্ট্রি
+    // আসে, একই শব্দ/লাইন দুই জায়গায় থাকলে সময়ের ছাপে নতুনটা থাকে।
+    function mergeLearningFromBackup(raw) {
+      var remote = sanitizeLearning(raw);
+      if (!remote) return false;
+      var changed = false, i, j, found;
+      for (i = 0; i < remote.words.length; i++) {
+        found = -1;
+        for (j = 0; j < learnStore.words.length; j++) if (learnStore.words[j][0] === remote.words[i][0]) { found = j; break; }
+        if (found === -1) { learnStore.words.push(remote.words[i]); changed = true; }
+        else if ((remote.words[i][2] || 0) > (learnStore.words[found][2] || 0)) { learnStore.words[found] = remote.words[i]; changed = true; }
+      }
+      for (i = 0; i < remote.lines.length; i++) {
+        found = -1;
+        for (j = 0; j < learnStore.lines.length; j++) if (learnStore.lines[j][0] === remote.lines[i][0]) { found = j; break; }
+        if (found === -1) { learnStore.lines.push(remote.lines[i]); changed = true; }
+        else if ((remote.lines[i][2] || 0) > (learnStore.lines[found][2] || 0)) { learnStore.lines[found] = remote.lines[i]; changed = true; }
+      }
+      if (changed) {
+        learnStore.words.sort(function (x, y) { return (x[2] || 0) - (y[2] || 0); });
+        learnStore.lines.sort(function (x, y) { return (x[2] || 0) - (y[2] || 0); });
+        while (learnStore.words.length > LEARN_MAX_WORDS) learnStore.words.shift();
+        while (learnStore.lines.length > LEARN_MAX_LINES) learnStore.lines.shift();
+        saveLearnStore();
+      }
+      return changed;
+    }
+    function noteLearningChanged() {
+      // লার্নিং বদলালে সেটাও এনক্রিপ্টেড ব্যাকআপে উঠে যাওয়া
+      // দরকার — এন্ট্রির সময়ের ছাপ না বদলে শুধু "সিঙ্ক বাকি"
+      // হিসেবে চিহ্নিত করে পুশের পালা দেওয়া হয়।
+      try {
+        if (typeof syncMeta !== 'undefined' && typeof schedulePush === 'function') {
+          syncMeta.pendingSync = true;
+          saveLocal();
+          schedulePush();
+        }
+      } catch (e) {}
+    }
+    /* === VOICE-LEARN-END === */
+
+    /* ============================================================
+       কাস্টম ক্যালেন্ডার — তারিখ বাছাই অ্যাপের থিমেই
+       অ্যান্ড্রয়েডের ডিফল্ট (নীল, ইংরেজি) ডেট-পিকারের বদলে
+       নিজস্ব পপআপ: গাঢ় সবুজ থিম, বাংলা মাসের নাম আর সংখ্যা,
+       Atma ফন্ট, মসৃণ অ্যানিমেশন। তারিখের ঘরগুলো আসলে শুধু-পড়ার
+       টেক্সট ইনপুট — .value পড়লে/বসালে ISO তারিখই (YYYY-MM-DD)
+       আসে/যায় (দেখায় বাংলা রূপে), তাই ফর্মের বাকি কোড আগের
+       মতোই চলে; চাপলেই ক্যালেন্ডার খোলে।
+       ============================================================ */
+    function fmtDateFieldText(iso) {
+      var d = parseDateLocal(iso);
+      return fmtNum0.format(d.getDate()) + ' ' + MONTH_NAMES_BN[d.getMonth()] + ' ' + bnYear(d.getFullYear());
+    }
+    function fmtDateFieldFull(iso) {
+      var d = parseDateLocal(iso);
+      return DAY_NAMES_BN[d.getDay()] + ', ' + fmtDateFieldText(iso);
+    }
+    var CAL_CHEV_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+    var CAL_CHEV_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+    var calEls = null, calTarget = null, calView = null, calSelected = '';
+    function buildCalendar() {
+      if (calEls) return calEls;
+      var bd = document.createElement('div');
+      bd.className = 'cal-backdrop';
+      bd.hidden = true;
+      bd.innerHTML =
+        '<div class="cal-panel" role="dialog" aria-modal="true" aria-label="তারিখ বাছুন">' +
+          '<div class="cal-kicker">তারিখ বাছুন</div>' +
+          '<div class="cal-title" id="calTitle"></div>' +
+          '<div class="cal-nav">' +
+            '<button type="button" class="cal-nav-btn" id="calPrev" aria-label="আগের মাস">' + CAL_CHEV_L + '</button>' +
+            '<div class="cal-month" id="calMonthLbl"></div>' +
+            '<button type="button" class="cal-nav-btn" id="calNext" aria-label="পরের মাস">' + CAL_CHEV_R + '</button>' +
+          '</div>' +
+          '<div class="cal-week"><span>রবি</span><span>সোম</span><span>মঙ্গল</span><span>বুধ</span><span>বৃহ</span><span>শুক্র</span><span>শনি</span></div>' +
+          '<div class="cal-grid" id="calGrid"></div>' +
+          '<div class="cal-foot">' +
+            '<button type="button" class="btn btn-tonal btn-sm" id="calTodayBtn">আজ</button>' +
+            '<button type="button" class="btn btn-outline btn-sm" id="calCancelBtn">বাতিল</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(bd);
+      calEls = {
+        bd: bd,
+        title: bd.querySelector('#calTitle'),
+        month: bd.querySelector('#calMonthLbl'),
+        grid: bd.querySelector('#calGrid')
+      };
+      bd.addEventListener('click', function (ev) { if (ev.target === bd) closeCalendar(); });
+      bd.querySelector('#calPrev').addEventListener('click', function () { shiftCalMonth(-1); });
+      bd.querySelector('#calNext').addEventListener('click', function () { shiftCalMonth(1); });
+      bd.querySelector('#calTodayBtn').addEventListener('click', function () { pickCalDate(todayStr()); });
+      bd.querySelector('#calCancelBtn').addEventListener('click', function () { closeCalendar(); });
+      calEls.grid.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('[data-iso]') : null;
+        if (b) pickCalDate(b.getAttribute('data-iso'));
+      });
+      return calEls;
+    }
+    function renderCalendar() {
+      var c = buildCalendar();
+      var y = calView.getFullYear(), m = calView.getMonth();
+      c.title.textContent = validDateStr(calSelected) ? fmtDateFieldFull(calSelected) : '';
+      c.month.textContent = MONTH_NAMES_BN[m] + ' ' + bnYear(y);
+      var startDay = new Date(y, m, 1).getDay();
+      var days = new Date(y, m + 1, 0).getDate();
+      var todayIso = todayStr();
+      var html = '';
+      for (var i = 0; i < startDay; i++) html += '<span class="cal-blank"></span>';
+      for (var d = 1; d <= days; d++) {
+        var iso = y + '-' + pad2(m + 1) + '-' + pad2(d);
+        var cls = 'cal-day' + (iso === todayIso ? ' today' : '') + (iso === calSelected ? ' sel' : '');
+        html += '<button type="button" class="' + cls + '" data-iso="' + iso + '" aria-label="' + fmtDateFieldFull(iso) + '">' + fmtNum0.format(d) + '</button>';
+      }
+      c.grid.innerHTML = html;
+    }
+    function openDateCalendar(input) {
+      buildCalendar();
+      calTarget = input;
+      calSelected = validDateStr(input.value) ? input.value : todayStr();
+      calView = parseDateLocal(calSelected);
+      calView.setDate(1);
+      renderCalendar();
+      calEls.bd.hidden = false;
+      requestAnimationFrame(function () { if (calEls) calEls.bd.classList.add('open'); });
+    }
+    function closeCalendar() {
+      if (!calEls) return;
+      calEls.bd.classList.remove('open');
+      calEls.bd.hidden = true;
+      calTarget = null;
+    }
+    function pickCalDate(iso) {
+      if (calTarget && validDateStr(iso)) {
+        calTarget.value = iso;
+        try { calTarget.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+      }
+      closeCalendar();
+    }
+    function shiftCalMonth(delta) {
+      calView = new Date(calView.getFullYear(), calView.getMonth() + delta, 1);
+      renderCalendar();
+    }
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && calEls && !calEls.bd.hidden) closeCalendar();
+    });
+    // একটা টেক্সট ইনপুটকে তারিখের ঘর বানানো: .value-তে ISO
+    // তারিখ থাকে, পর্দায় বাংলা রূপ দেখায়, চাপলেই ক্যালেন্ডার।
+    function makeDateField(el, initialIso) {
+      var nativeDesc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+      var iso = validDateStr(initialIso) ? initialIso : todayStr();
+      el.setAttribute('readonly', '');
+      el.classList.add('date-field');
+      el.setAttribute('autocomplete', 'off');
+      function paint() { nativeDesc.set.call(el, iso ? fmtDateFieldText(iso) : ''); }
+      Object.defineProperty(el, 'value', {
+        configurable: true,
+        get: function () { return iso; },
+        set: function (v) { iso = validDateStr(v) ? v : ''; paint(); }
+      });
+      paint();
+      el.addEventListener('click', function () { openDateCalendar(el); });
+      el.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openDateCalendar(el); }
+      });
+      return el;
+    }
+    if (els.dateInput) makeDateField(els.dateInput, todayStr());
+
     /* ============================================================
        পিডিএফ প্রতিবেদন ও সিএসভি
        ============================================================ */
@@ -3704,6 +4278,24 @@
       if (ev.key === 'Escape' && !els.periodModal.hidden) closePeriodPreview();
     });
     els.pdfBtn.addEventListener('click', generateMonthlyPdf);
+    /* ---------- পিডিএফ বোতামের জায়গা: পর্দা অনুযায়ী ----------
+       মোবাইলে (<960px) বোতামটা গিটহাব ব্যাকআপ অংশের ঠিক ওপরের
+       সারিতে থাকে; ডেস্কটপে (≥960px) হিসাবের ইতিহাস কার্ডের
+       ভেতরে CSV বোতামগুলোর নিচের ফাঁকা জায়গায় বসে। বোতামটা
+       একটাই — শুধু জায়গা বদলায়, তাই কাজ ও আইডি একই থাকে। */
+    var pdfBtnMq = window.matchMedia('(min-width: 960px)');
+    function placePdfBtn() {
+      var historyPanel = document.querySelector('.history-panel');
+      var slot = document.getElementById('pdfSlotMobile');
+      if (pdfBtnMq.matches) {
+        if (historyPanel && els.pdfBtn.parentNode !== historyPanel) historyPanel.appendChild(els.pdfBtn);
+      } else if (slot && els.pdfBtn.parentNode !== slot) {
+        slot.appendChild(els.pdfBtn);
+      }
+    }
+    placePdfBtn();
+    if (pdfBtnMq.addEventListener) pdfBtnMq.addEventListener('change', placePdfBtn);
+    else if (pdfBtnMq.addListener) pdfBtnMq.addListener(placePdfBtn);
 
     function downloadBlob(blob, filename) {
       var url = URL.createObjectURL(blob);
@@ -4188,6 +4780,11 @@
     function mergeRemote(remote) {
       var clean = sanitizeBackup(remote.data);
       if (!clean) return false;
+      // লার্নিংও ব্যাকআপের এনক্রিপ্ট করা অংশে থাকে — অন্য
+      // ডিভাইসের শেখা শব্দ/লাইন এখানকার স্টোরে মিলিয়ে নেওয়া
+      // হয়। এন্ট্রি মেলানোর আগেই করা হয়, যাতে শুধু লার্নিং
+      // বদলানো ব্যাকআপও (এন্ট্রির ছাপ একই) এখানে এসে পৌঁছায়।
+      mergeLearningFromBackup(remote.data && remote.data.learning);
       // সময়ের ছাপ দেখে বাদ দেওয়া হয় শুধু তখনই, যখন ব্যাকআপের
       // বিষয়বস্তু base-এর সঙ্গে হুবহু মিলে যায়। ছাপ সমান/পুরনো
       // হলেও বিষয়বস্তু আলাদা হলে মিলিয়ে নেওয়া হয় — নইলে অন্য
@@ -4306,6 +4903,8 @@
       // স্থানীয় হিসাব খালি থাকলে ব্যাকআপটাই পুরোপুরি বসে
       var clean = sanitizeBackup(remote.data);
       if (!clean) return;
+      // ব্যাকআপে থাকা লার্নিংটাও ফিরে আসে (নতুন ডিভাইসে রিস্টোর)
+      mergeLearningFromBackup(remote.data && remote.data.learning);
       state.entries = clean.entries;
       state.budgets = clean.budgets;
       state.nextId = clean.nextId;
@@ -4328,7 +4927,7 @@
     }
     function pushBackup(sha, isRetry) {
       var stamp = syncMeta.updatedAt || new Date().toISOString();
-      var inner = { entries: state.entries, budgets: state.budgets, updatedAt: stamp };
+      var inner = { entries: state.entries, budgets: state.budgets, updatedAt: stamp, learning: learnSnapshot() };
       return encryptBackupData(inner).then(function (enc) {
         var wrapper = {
           app: 'khorochpotro', version: 2, encrypted: true, updatedAt: stamp,
