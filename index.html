@@ -580,6 +580,62 @@
       @media (prefers-color-scheme: dark) { #toast { background: #e6f0ea; color: #14201b; } }
       #toast.show { transform: translate(-50%, 0); opacity: 1; }
       #toast button { background: transparent; border: 0; color: inherit; font-weight: 700; text-decoration: underline; padding: 4px; white-space: nowrap; }
+
+      /* ---------- সিঙ্কের অবস্থা: হেডারের ভেতরের চিপ ----------
+         হেডারের পুরো চওড়াজুড়ে বসে — বাম-ডান কিনারা শিরোনাম আর
+         নিচের মাস-বারের সঙ্গে এক লাইনে মেলে। অ্যাপের নিজের
+         সারফেস, বর্ডার আর রঙের টোকেনেই তৈরি, তাই আলাদা করে
+         ভেসে থাকে না। চক্র ঘুরলে সিঙ্ক চলছে, সবুজ হলে হয়েছে,
+         লাল হলে হয়নি, হলুদ ঘড়ি হলে নেটের অপেক্ষায় আছে। */
+      .sync-chip {
+        flex: 0 0 100%; margin-top: 12px; min-width: 0;
+        display: flex; align-items: center; gap: 9px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+        box-shadow: var(--shadow-sm); padding: 8px 14px;
+        font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1.4;
+      }
+      .sync-chip[hidden] { display: none; }
+      .sync-chip .sp-ico { display: inline-flex; flex: none; width: 18px; height: 18px; align-items: center; justify-content: center; }
+      .sync-chip .sp-ico svg { width: 18px; height: 18px; }
+      .sync-chip .sp-text { min-width: 0; overflow-wrap: anywhere; }
+      .sync-chip.busy .sp-ico { color: var(--primary); }
+      .sync-chip.ok { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
+      .sync-chip.ok .sp-ico { color: var(--primary); }
+      .sync-chip.error { background: var(--expense-bg); color: var(--expense); border-color: transparent; }
+      .sync-chip.wait { background: var(--amber-bg); color: var(--ink); border-color: transparent; }
+      .sync-chip.wait .sp-ico { color: var(--amber); }
+      .sync-spinner {
+        display: block; width: 16px; height: 16px; border-radius: 50%;
+        border: 2.5px solid currentColor; border-top-color: transparent;
+        animation: sync-spin .7s linear infinite;
+      }
+      @keyframes sync-spin { to { transform: rotate(360deg); } }
+
+      /* ---------- খোলার সময় রিস্টোর পর্দা ----------
+         ব্যাকআপ চালু থাকলে অ্যাপের আগে এই পর্দা ওঠে; সার্ভার থেকে
+         সর্বশেষ ব্যাকআপ রিস্টোর শেষ হলেই ফেড হয়ে সরে যায়। */
+      .restore-overlay {
+        position: fixed; inset: 0; z-index: 90; background: var(--bg);
+        display: flex; align-items: center; justify-content: center; padding: 24px;
+        transition: opacity .3s ease;
+      }
+      .restore-overlay[hidden] { display: none; }
+      .restore-overlay.done { opacity: 0; pointer-events: none; }
+      /* বাক্সটা অ্যাপের প্যানেলের মতোই — একই সারফেস, বর্ডার,
+         ব্যাসার্ধ আর ছায়া, তাই পর্দাটা অ্যাপের অংশই মনে হয় */
+      .restore-box {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        box-shadow: var(--shadow-md); padding: 28px 24px; text-align: center;
+        width: 100%; max-width: 340px;
+      }
+      .restore-spinner {
+        display: block; width: 52px; height: 52px; margin: 0 auto 18px; border-radius: 50%;
+        border: 5px solid var(--surface-3); border-top-color: var(--primary);
+        animation: sync-spin .8s linear infinite;
+      }
+      .restore-title { font-size: 18px; font-weight: 700; margin: 0; }
+      .restore-sub { font-size: 14.5px; color: var(--ink-2); margin: 6px 0 0; }
+      @media (prefers-reduced-motion: reduce) { .sync-spinner, .restore-spinner { animation: none; } }
       footer.page { margin-top: 26px; text-align: center; color: var(--ink-3); font-size: 14px; }
       footer.page a { color: var(--primary); font-weight: 600; }
 
@@ -852,6 +908,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             মাসিক প্রতিবেদন (পিডিএফ)
           </button>
+        </div>
+        <!-- সিঙ্কের অবস্থা: হেডারের পুরো চওড়াজুড়ে বসা চিপ — চক্র = সিঙ্ক হচ্ছে, টিক = হয়েছে, লাল চিহ্ন = হয়নি -->
+        <div id="syncChip" class="sync-chip" role="status" aria-live="polite" hidden>
+          <span class="sp-ico" id="syncChipIcon"></span>
+          <span class="sp-text" id="syncChipText"></span>
         </div>
       </header>
 
@@ -1129,6 +1190,15 @@
 
     <div id="toast" role="status"></div>
 
+    <!-- খোলার সময় রিস্টোর পর্দা: সার্ভারের ব্যাকআপ সবার আগে রিস্টোর হয়, তারপর অ্যাপ -->
+    <div id="restoreOverlay" class="restore-overlay" hidden>
+      <div class="restore-box">
+        <span class="restore-spinner" aria-hidden="true"></span>
+        <p class="restore-title">সার্ভার থেকে ব্যাকআপ আনা হচ্ছে…</p>
+        <p class="restore-sub">সর্বশেষ হিসাব রিস্টোর করে তারপর অ্যাপ খুলবে</p>
+      </div>
+    </div>
+
     <script>
     'use strict';
     /* ============================================================
@@ -1305,6 +1375,7 @@
      'searchInput', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
      'shownExpense', 'csvBtn', 'importBtn', 'importFile', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
      'voiceLiveText', 'voiceDetected', 'exampleList', 'toast', 'voiceNotice', 'micEnableBtn',
+     'syncChip', 'syncChipIcon', 'syncChipText', 'restoreOverlay',
      'offlineText', 'offlineBtn', 'offlineProg', 'offlineBar',
      'parserModelVersion', 'parserModelStatus', 'parserModelBtn',
      'ghTokenInput', 'ghTokenSaveBtn', 'ghTokenClearBtn', 'ghTokenStatus',
@@ -3820,6 +3891,41 @@
       } catch (e) {}
     }
     function syncReady() { return !!(ghToken && ghPassphrase && cryptoOk); }
+
+    /* ---------- সিঙ্কের অবস্থা দেখানো চিপ ----------
+       হেডারের ভেতরে বসে: 'busy'-তে ঘূর্ণায়মান চক্র (সিঙ্ক চলছে),
+       'ok'-তে সবুজ টিক (সার্ভারে পৌঁছে নিশ্চিত হয়েছে), 'error'-এ
+       লাল চিহ্ন (হয়নি), 'wait'-এ ঘড়ি (বাকি আছে / নেট নেই)।
+       ঘটনাভিত্তিক বার্তা (সিঙ্ক হয়েছে, রিস্টোর হয়েছে, হয়নি)
+       কিছুক্ষণ ধরে থাকে, তারপর চিপ নিজের চলতি অবস্থায় ফিরে
+       যায় — renderSyncStatus প্রতিবার refreshSyncChip ডাকে,
+       তাই চিপ কখনো পুরনো অবস্থায় আটকে থাকে না। ব্যাকআপ চালু
+       না থাকলে চিপ দেখাই যায় না। */
+    var syncChipTimer = null;
+    var syncChipHoldUntil = 0;
+    var SYNC_ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    var SYNC_ICON_ERR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 7.6V13"/><path d="M12 16.4h.01"/></svg>';
+    var SYNC_ICON_WAIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 6.8V12l3.6 2"/></svg>';
+    function showSyncChip(kind, text, holdMs) {
+      if (!els.syncChip) return;
+      els.syncChip.hidden = false;
+      els.syncChip.className = 'sync-chip ' + kind;
+      els.syncChipIcon.innerHTML = kind === 'busy' ? '<span class="sync-spinner"></span>'
+        : kind === 'ok' ? SYNC_ICON_OK : kind === 'wait' ? SYNC_ICON_WAIT : SYNC_ICON_ERR;
+      els.syncChipText.textContent = text;
+      syncChipHoldUntil = holdMs ? Date.now() + holdMs : 0;
+      clearTimeout(syncChipTimer);
+      if (holdMs) syncChipTimer = setTimeout(refreshSyncChip, holdMs + 60);
+    }
+    function refreshSyncChip() {
+      if (!els.syncChip) return;
+      if (Date.now() < syncChipHoldUntil) return;
+      if (!ghToken || !ghPassphrase || !cryptoOk) { els.syncChip.hidden = true; return; }
+      if (syncBusy) showSyncChip('busy', 'সিঙ্ক হচ্ছে…', 0);
+      else if (syncMeta.pendingSync) showSyncChip('wait', navigator.onLine ? 'সিঙ্ক বাকি আছে' : 'নেট নেই — নেট এলেই সিঙ্ক হবে', 0);
+      else if (syncMeta.lastSyncAt) showSyncChip('ok', 'সিঙ্ক হয়েছে · ' + fmtBackupTime(syncMeta.lastSyncAt), 0);
+      else showSyncChip('ok', 'সিঙ্ক চালু আছে', 0);
+    }
     function renderSyncStatus() {
       var msg;
       if (!ghToken) {
@@ -3838,6 +3944,7 @@
         msg = 'সিঙ্ক চালু আছে';
       }
       els.ghSyncStatus.textContent = msg;
+      refreshSyncChip();
     }
     // প্রতিটি বদলের (যোগ/সম্পাদনা/মোছা/বাজেট/আমদানি) পর ডাকা হয়
     function markChanged() {
@@ -3846,6 +3953,12 @@
       saveLocal();
       renderSyncStatus();
       schedulePush();
+      // বদল হলেই চিপে চক্র ঘুরতে থাকে — সিঙ্ক শেষ হলে attemptPush
+      // সেটাকে টিক বা লাল চিহ্নে বদলে দেয়
+      if (syncReady()) {
+        if (navigator.onLine) showSyncChip('busy', 'সিঙ্ক হচ্ছে…', 0);
+        else showSyncChip('wait', 'নেট নেই — নেট এলেই সিঙ্ক হবে', 0);
+      }
     }
     function schedulePush() {
       if (!syncReady()) { renderSyncStatus(); return; }
@@ -4001,11 +4114,13 @@
       if (!syncReady() || !syncMeta.pendingSync || !navigator.onLine) { renderSyncStatus(); return; }
       syncBusy = true;
       renderSyncStatus();
+      showSyncChip('busy', 'সিঙ্ক হচ্ছে…', 0);
       ghFetchBackup().then(function (remote) {
         if (remote && remote.locked) {
           // পাসফ্রেজ না মেলা ব্যাকআপের উপর লেখা হয় না — সেটাই একমাত্র কপি হতে পারে
           syncBusy = false;
           ghSetStatus(lockedMessage(remote.locked));
+          showSyncChip('error', 'পাসফ্রেজ মিলছে না — সিঙ্ক হয়নি', 8000);
           renderSyncStatus();
           return null;
         }
@@ -4014,6 +4129,7 @@
             adoptRemote(remote);
             syncBusy = false;
             ghSetStatus('');
+            showSyncChip('ok', 'সার্ভার থেকে ব্যাকআপ রিস্টোর হয়েছে', 5000);
             renderSyncStatus();
             return null;
           }
@@ -4022,18 +4138,25 @@
         return pushBackup(remote ? remote.sha : null, false).then(function () {
           syncBusy = false;
           ghSetStatus('');
+          // গিটহাবের PUT সফল হওয়ার পরেই এই টিক আসে — তার আগে নয়
+          showSyncChip('ok', 'সব হিসাব সিঙ্ক হয়েছে · ' + fmtBackupTime(syncMeta.lastSyncAt), 5000);
           renderSyncStatus();
         });
       }).catch(function (err) {
         syncBusy = false;
         ghSetStatus(err.message || 'সিঙ্ক হয়নি — পরে আবার চেষ্টা হবে।');
+        showSyncChip('error', 'সিঙ্ক হয়নি — পরে আবার চেষ্টা হবে', 8000);
         renderSyncStatus();
       });
     }
-    // খোলার সময়: সর্বশেষ ব্যাকআপ টেনে এনে স্থানীয় হিসাবের সঙ্গে মেলানো
-    function pullLatestOnLoad() {
+    // খোলার সময়: সর্বশেষ ব্যাকআপ টেনে এনে স্থানীয় হিসাবের সঙ্গে মেলানো।
+    // done থাকলে শেষে ফলাফল জানানো হয় ('restored' | 'merged' |
+    // 'uptodate' | 'nobackup' | 'locked' | 'failed' | 'skipped') —
+    // অ্যাপ খোলার সময় রিস্টোর পর্দা সরাতে init এটা ব্যবহার করে।
+    function pullLatestOnLoad(done) {
+      function finish(outcome) { if (done) done(outcome); }
       renderSyncStatus();
-      if (!ghToken || !navigator.onLine || syncBusy) return;
+      if (!ghToken || !navigator.onLine || syncBusy) { finish('skipped'); return; }
       ghFetchBackup().then(function (remote) {
         if (!remote) {
           // গিটহাবে এখনো ব্যাকআপ নেই — স্থানীয় হিসাব থাকলে সেটাই প্রথম ব্যাকআপ হবে
@@ -4042,21 +4165,36 @@
           }
           schedulePush();
           renderSyncStatus();
+          finish('nobackup');
           return;
         }
-        if (remote.locked) { ghSetStatus(lockedMessage(remote.locked)); return; }
-        if (!remote.data || !Array.isArray(remote.data.entries)) return;
-        if (state.entries.length === 0 && !syncMeta.pendingSync) { adoptRemote(remote); return; }
+        if (remote.locked) {
+          ghSetStatus(lockedMessage(remote.locked));
+          showSyncChip('error', lockedMessage(remote.locked), 8000);
+          finish('locked');
+          return;
+        }
+        if (!remote.data || !Array.isArray(remote.data.entries)) { finish('failed'); return; }
+        if (state.entries.length === 0 && !syncMeta.pendingSync) {
+          adoptRemote(remote);
+          showSyncChip('ok', 'সার্ভার থেকে ব্যাকআপ রিস্টোর হয়েছে', 5000);
+          finish('restored');
+          return;
+        }
+        var changed = false;
         if ((remote.updatedAt || '') > (syncMeta.baseUpdatedAt || '')) {
-          mergeRemote(remote);
+          changed = mergeRemote(remote);
+          if (changed) showSyncChip('ok', 'অন্য ডিভাইসের সর্বশেষ হিসাব এসে গেছে', 5000);
           if (syncMeta.pendingSync) schedulePush();
         } else if (syncMeta.pendingSync) {
           schedulePush();
         }
         renderSyncStatus();
+        finish(changed ? 'merged' : 'uptodate');
       }).catch(function () {
         // খোলার সময় টানা না গেলে স্থানীয় হিসাব দিয়েই চলে; বাকি সিঙ্ক পরে হবে
         if (syncMeta.pendingSync) schedulePush();
+        finish('failed');
       });
     }
     window.addEventListener('online', function () {
@@ -4211,6 +4349,29 @@
       syncDropdown(rec);
     }
 
+    /* ---------- খোলার সময় সবার আগে রিস্টোর ----------
+       ব্যাকআপ চালু থাকলে অ্যাপের বদলে প্রথমে রিস্টোর পর্দা ওঠে:
+       সার্ভার থেকে সর্বশেষ ব্যাকআপ টেনে স্থানীয় হিসাবের সঙ্গে
+       মিলিয়ে (বা খালি ডিভাইসে পুরোপুরি বসিয়ে) তবেই পর্দা সরে —
+       তাই অন্য ডিভাইসে রিলোড করলেই আগের ডিভাইসের হিসাব সবার
+       আগে চলে আসে। টানা না গেলে বা বেশি দেরি হলে (১২ সেকেন্ড)
+       পর্দা সরে যায় আর স্থানীয় হিসাব দিয়েই অ্যাপ চলে; টানা
+       ব্যাকগ্রাউন্ডে শেষ হলে হিসাব তখনই মিলে যায়। */
+    function bootRestore() {
+      if (!ghToken || !ghPassphrase || !cryptoOk || !navigator.onLine) { pullLatestOnLoad(); return; }
+      els.restoreOverlay.hidden = false;
+      var settled = false;
+      function finish(outcome) {
+        if (settled) return;
+        settled = true;
+        els.restoreOverlay.classList.add('done');
+        setTimeout(function () { els.restoreOverlay.hidden = true; }, 380);
+        if (outcome === 'failed') showSyncChip('error', 'সার্ভার থেকে ব্যাকআপ আনা যায়নি — এই ডিভাইসের হিসাব দেখানো হচ্ছে', 8000);
+      }
+      setTimeout(function () { finish('timeout'); }, 12000);
+      pullLatestOnLoad(finish);
+    }
+
     /* ---------- শুরু ---------- */
     function init() {
       var now = new Date();
@@ -4236,7 +4397,7 @@
       enhanceSelect(els.categorySelect);
       enhanceSelect(els.catFilter);
       enhanceSelect(els.typeFilter);
-      pullLatestOnLoad();
+      bootRestore();
     }
     init();
     </script>
