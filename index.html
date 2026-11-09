@@ -577,6 +577,18 @@
       .budget-meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); margin-top: 8px; }
       .budget-meta strong { color: var(--ink); }
       .budget-meta .over-text { color: var(--expense); font-weight: 700; }
+      /* বাজেট গোটানো/খোলা: হেডার সারিতে শিরোনাম আর টগল বোতাম —
+         GitHub ব্যাকআপের backup-head-এর মতোই সাজানো */
+      .budget-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+      .budget-head h2 { margin: 0; }
+      /* সেটিংস গোটানো/খোলা: শুধু বাজেট সেট করার অংশটা (ইনপুট/সেভ)
+         মসৃণভাবে গুটিয়ে যায় — প্রোগ্রেস সারাংশ (#budgetView) এই
+         গোটানো অংশের বাইরে থাকে, তাই minimize থাকলেও প্রোগ্রেস বার
+         আর খরচ/বাকির লাইন সবসময় দেখায়। বাজেটের হিসাব/কাজে কোনো
+         হাত পড়ে না (backup-body-র মতোই) */
+      .budget-body { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows .35s ease, opacity .28s ease; }
+      .budget-body-inner { overflow: hidden; min-height: 0; }
+      .budget-panel.minimized .budget-body { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
 
       /* ---------- Chart (প্রিভিউ প্যানেলের ছোট ডোনাট) ---------- */
       .donut-box { position: relative; width: 168px; height: 168px; flex: none; margin: 0 auto; }
@@ -1187,16 +1199,22 @@
           </section>
 
           <!-- Budget -->
-          <section class="card panel budget-panel" aria-label="মাসিক বাজেট">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
-              মাসিক বাজেট
-            </h2>
+          <section class="card panel budget-panel" id="budgetPanel" aria-label="মাসিক বাজেট">
+            <div class="budget-head">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+                মাসিক বাজেট
+              </h2>
+              <button class="btn btn-tonal btn-sm" type="button" id="budgetMinToggle" hidden style="display:none" aria-expanded="true">minimize করুন</button>
+            </div>
+            <div class="budget-body" id="budgetSettingsBody"><div class="budget-body-inner">
             <p class="hint" id="budgetMonthLbl">নির্বাচিত মাসের জন্য বাজেট ঠিক করুন।</p>
             <div class="budget-row">
               <input id="budgetInput" type="text" inputmode="decimal" placeholder="যেমন: ২০০০০" autocomplete="off" />
               <button class="btn btn-tonal" type="button" id="budgetSaveBtn">ঠিক করুন</button>
             </div>
+            <p class="hint" id="budgetEmpty" style="margin:12px 0 0">বাজেট ঠিক করা হয়নি।</p>
+            </div></div>
             <div id="budgetView" style="display:none">
               <div class="progress"><div id="budgetBar"></div></div>
               <div class="budget-meta">
@@ -1204,7 +1222,6 @@
                 <span id="budgetRemain"></span>
               </div>
             </div>
-            <p class="hint" id="budgetEmpty" style="margin:12px 0 0">বাজেট ঠিক করা হয়নি।</p>
           </section>
 
         </div>
@@ -1525,7 +1542,7 @@
      'monthIncomeLine', 'avgDailyVal', 'avgDailySub', 'entryFormPanel', 'entryForm', 'typeSeg', 'segExpense', 'segIncome', 'amountInput',
      'amountField', 'categorySelect', 'dateInput', 'descInput', 'submitBtn', 'cancelEditBtn', 'formTitle',
      'budgetInput', 'budgetSaveBtn', 'budgetView', 'budgetEmpty', 'budgetBar', 'budgetSpent', 'budgetTotal',
-     'budgetRemain', 'budgetMonthLbl',
+     'budgetRemain', 'budgetMonthLbl', 'budgetMinToggle', 'budgetPanel', 'budgetSettingsBody',
      'searchInput', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
      'shownExpense', 'csvBtn', 'importBtn', 'importFile', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
      'voiceLiveText', 'voiceDetected', 'toast', 'voiceNotice', 'micEnableBtn',
@@ -2981,9 +2998,42 @@
       }, 350);
     }
 
+    /* ---------- বাজেট গোটানো/খোলা (minimize/maximize) ----------
+       নির্বাচিত মাসের বাজেট সেট থাকলেই গোটানোর বোতামটা দেখায় —
+       ঠিক GitHub ব্যাকআপের ghMinToggle-এর মতো (সেখানে টোকেন আর
+       পাসফ্রেজ দুটোই সেভ থাকলে দেখায়)। গোটানো শুধু বাজেট সেট
+       করার অংশটা (ইনপুট/সেভ) লুকায় — প্রোগ্রেস সারাংশ
+       (#budgetView: প্রোগ্রেস বার, খরচ হয়েছে, বাকি আছে) গোটানো
+       অংশের বাইরে থাকায় minimize থাকলেও সবসময় দেখায়। বাজেট
+       সেট করা, প্রগ্রেস, হিসাব সব আগের মতোই চলে; বাজেট মোছা
+       বা বন্ধ হয় না।
+       অবস্থাটা localStorage-এ থাকে, তাই রিলোডের পরেও গোটানোই
+       থাকে — ইউজার maximize না করা পর্যন্ত। */
+    var BUDGET_MIN_KEY = 'khorochpotro_budget_min';
+    var budgetMin = false;
+    try { budgetMin = localStorage.getItem(BUDGET_MIN_KEY) === '1'; } catch (e) { budgetMin = false; }
+    function renderBudgetMinUI() {
+      var hasBudget = !!(state.budgets && state.budgets[state.selectedMonth]);
+      var min = hasBudget && budgetMin;
+      if (els.budgetPanel) els.budgetPanel.classList.toggle('minimized', min);
+      if (els.budgetMinToggle) {
+        els.budgetMinToggle.hidden = !hasBudget;
+        els.budgetMinToggle.style.display = hasBudget ? 'inline-flex' : 'none';
+        els.budgetMinToggle.textContent = min ? 'maximize করুন' : 'minimize করুন';
+        els.budgetMinToggle.setAttribute('aria-expanded', min ? 'false' : 'true');
+      }
+      if (els.budgetSettingsBody) els.budgetSettingsBody.inert = min;
+    }
+    if (els.budgetMinToggle) els.budgetMinToggle.addEventListener('click', function () {
+      budgetMin = !budgetMin;
+      try { localStorage.setItem(BUDGET_MIN_KEY, budgetMin ? '1' : '0'); } catch (e) {}
+      renderBudgetMinUI();
+    });
+
     function renderBudget() {
       var ym = state.selectedMonth;
       var budget = state.budgets[ym];
+      renderBudgetMinUI();
       var monthExp = sumEntries(filterBy(state.entries, function (e) { return monthOf(e.date) === ym && e.type === 'expense'; }), 'expense');
       if (!budget) {
         els.budgetView.style.display = 'none';
