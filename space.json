@@ -1,0 +1,8 @@
+{
+  "runtime": "typescript",
+  "platformVersion": 28,
+  "entry": "client/dist/index.html",
+  "name": "খরচপত্র মাল্টি-ইউজার",
+  "slug": "khrcptr-maaltti-iujaar",
+  "managedCronJobs": []
+}

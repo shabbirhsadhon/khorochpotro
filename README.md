@@ -1,45 +1,34 @@
-# খরচপত্র (khorochpotro)
+# খরচপত্র মাল্টি-ইউজার (Khorochpotro Multi-User)
 
-Daily expense tracker in Bangla — manual entry and Bangla voice input, with automatic category and expense/deposit detection. Single file, no framework, no build step. Works on phone and laptop.
+প্রতিদিনের আয়-খরচের হিসাবের অ্যাপ — ইমেইল + পাসওয়ার্ড দিয়ে লগইন,
+প্রত্যেক ব্যবহারকারীর হিসাব সম্পূর্ণ আলাদা। ভয়েস (বাংলা) দিয়ে
+এন্ট্রি, মাসিক বাজেট, ক্যাটাগরি ডোনাট, PDF রিপোর্ট, CSV
+ইমপোর্ট/এক্সপোর্ট, আর GitHub-এ এনক্রিপ্টেড (AES-256-GCM) ব্যাকআপ।
 
-> **Status:** Web version ready. Android app (APK) is being built from this same code. Offline on-device voice and automatic GitHub sync are in progress.
+## গঠন
 
-## Open it
+- `client/` — React + TypeScript ফ্রন্টএন্ড (`client/src/App.tsx`,
+  `client/src/theme.css`, ফন্ট `client/src/assets/fonts/`)
+- `server/` — সার্ভার অ্যাকশন ও ডেটাবেজ স্কিমা
+  (`server/src/actions.ts`, `server/src/schema.ts`,
+  `server/src/privileged.ts` — পাসওয়ার্ড হ্যাশিং ও সোর্স-আর্কাইভের
+  মতো হোস্ট-ক্ষমতার কাজ)
+- `drizzle/` — SQLite মাইগ্রেশন
+- `space.json` — Muse ওয়েব-আর্টিফ্যাক্টের মেটাডেটা
 
-- **Website (GitHub Pages):** enable Pages in Settings → Pages → Deploy from a branch → `main` / root, then open `https://shabbirhsadhon.github.io/khorochpotro/` — Pages needs a **public** repository on GitHub Free (see [Security](#security)).
-- **On your phone:** open the Pages link in Brave/Chrome → menu → Add to Home screen. It opens like an app.
-- **Offline:** after the first load, the page works from the installed shortcut. Voice needs the on-device model (see below).
+## চালানো / বিল্ড
 
-## Features
+এই প্রজেক্ট Muse ওয়েব-আর্টিফ্যাক্ট রানটাইমে
+(`@hatch/space-sdk`) চলে।
 
-- Manual entry for expenses and deposits, with edit and delete
-- Bangla voice input (microphone, `bn-BD`): speak an amount and it detects the amount, whether it is an expense or a deposit, and the category
-- Bangla number words: সাড়ে সাতশো = 750, এক হাজার দুইশো = 1200, দেড় হাজার = 1500
-- Balance, today / weekly / monthly totals, average daily expense
-- Category chart, monthly budget progress, search and filter
-- Monthly report as a real PDF file, plus CSV export / import
-- Microphone permission: granted once in the browser, then remembered. Open over HTTPS — a downloaded file opened directly (`content://` / `file://`) cannot use the microphone.
-- Offline voice (in progress): an on-device Whisper model, downloaded once while online, then transcribes on the phone with no internet. The built-in browser voice needs internet.
-- Automatic sync (in progress): **no buttons.** Every entry uploads to GitHub by itself right after it is saved. No internet? Entries stay saved on the device and upload automatically when the connection returns. Opening the app or website on any device loads the latest backup from GitHub, so phone and laptop always show the same data. See [Security](#security) for how the backup is protected.
-
-## Project layout
-
-```text
-khorochpotro/
-├── index.html      # the whole app — open it directly or serve it with Pages
-├── README.md       # this file
-├── SECURITY.md     # security notes — read before enabling Pages or sync
-├── .gitignore      # keeps tokens, local backups and build outputs out of the repo
-├── data/           # sync file location (created by the app; see SECURITY.md)
-└── android/        # Capacitor Android project (APK build — coming soon)
+```sh
+bun install
+bun run typecheck
+bun run build
 ```
 
-## Development
+## ডেটা সুরক্ষা
 
-No build step. Edit `index.html` and reload. All maths uses paisa integers, so totals have no rounding errors.
-
-## Security
-
-See [SECURITY.md](SECURITY.md). Short version: the backup is encrypted on your device before upload, so GitHub only ever stores unreadable data. Never commit a token, a keystore, or your unencrypted backup to a public repo.
-
-Built with Muse for Shabbir Hossin Sadhon — https://github.com/shabbirhsadhon
+ব্যবহারকারীর ডেটাবেজ (`app.db`) এই আর্কাইভে নেই এবং Git-এও ওঠা
+উচিত নয় — `.gitignore`-এ বাদ দেওয়া আছে। পাসওয়ার্ড সার্ভারে শুধু
+সল্টেড PBKDF2-SHA256 হ্যাশ হিসেবে থাকে।

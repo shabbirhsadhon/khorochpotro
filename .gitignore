@@ -1,27 +1,15 @@
-# Secrets and local files — never commit these
-.env
-*.env
-*.key
-*.pem
-*.jks
-*.keystore
-local.properties
-**/local.properties
-
-# Local backups and exports (keep them on your device, not in git)
-data/backup.json
-*.csv
-*.pdf
-
-# Node / Android build outputs
 node_modules/
-android/app/build/
-android/build/
-android/.gradle/
-android/local.properties
-*.apk
-*.aab
-
-# OS files
-.DS_Store
-Thumbs.db
+app.db
+app.db-shm
+app.db-wal
+.space-build/
+.space-build-cvm/
+.bun-cache/
+.harness/
+audits/
+blobs/
+client/dist/
+client/dist-cvm/
+server/dist/
+server/.generated/
+*.tsbuildinfo
