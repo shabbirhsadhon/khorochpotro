@@ -3374,10 +3374,13 @@
         if (decodeCtx.state === 'suspended' && decodeCtx.resume) decodeCtx.resume();
         return decodeCtx.decodeAudioData(buf);
       }).then(function (audioBuf) {
-        return offlineModel.transcriber(audioTo16k(audioBuf), { language: 'bengali', task: 'transcribe' });
+        var audio = trimVoiceAudio(audioTo16k(audioBuf));
+        if (!audio) return null;
+        return offlineModel.transcriber(audio, { language: 'bengali', task: 'transcribe', max_new_tokens: 128 });
       }).then(function (out) {
         offlineProcessing = false;
-        var text = (out && out.text) ? String(out.text).trim() : '';
+        if (!out) { els.voiceStatus.textContent = 'কিছু শোনা যায়নি। আবার বলুন।'; return; }
+        var text = cleanTranscript(out.text);
         if (!text) { els.voiceStatus.textContent = 'কথাটা বোঝা যায়নি। আবার স্পষ্ট করে বলুন, অথবা হাতে লিখুন।'; return; }
         els.voiceLive.classList.add('show');
         els.voiceLiveText.textContent = text;
@@ -3405,6 +3408,51 @@
         out[j] = a + (b - a) * frac;
       }
       return out;
+    }
+    /* রেকর্ডিংয়ের শুরু-শেষের নীরব অংশ কেটে বাদ দেওয়া হয় — লম্বা
+       নীরবতা বা প্রায়-শব্দহীন অডিও পেলেই Whisper-tiny ">> >> >>…"
+       জাতীয় আবোল-তাবোল লুপে ঢুকে যায় (ইউটিউব ক্যাপশনের স্পিকার-
+       বদলের চিহ্ন, মডেলের ট্রেনিং ডেটা থেকে শেখা)। পুরোপুরি নীরব
+       বা খুব ছোট রেকর্ডিং হলে null — মডেল চালানোই হয় না। */
+    function trimVoiceAudio(data) {
+      var peak = 0, i, a;
+      for (i = 0; i < data.length; i++) { a = Math.abs(data[i]); if (a > peak) peak = a; }
+      if (peak < 0.02) return null;
+      var th = Math.max(0.015, peak * 0.1);
+      var first = 0;
+      while (first < data.length && Math.abs(data[first]) <= th) first++;
+      var last = data.length - 1;
+      while (last > first && Math.abs(data[last]) <= th) last--;
+      var pad = 1600; // দুই পাশে ০.১ সেকেন্ড করে ছাড়
+      first = Math.max(0, first - pad);
+      last = Math.min(data.length - 1, last + pad);
+      if (last - first + 1 < 4800) return null; // ০.৩ সেকেন্ডের কম — ধরার মতো কথা নয়
+      return (first === 0 && last === data.length - 1) ? data : data.slice(first, last + 1);
+    }
+    /* মডেলের আউটপুট পরিষ্কার ও যাচাই: স্পেশাল টোকেন (<|...|>) বাদ,
+       একই শব্দের অনন্ত পুনরাবৃত্তি ভেঙে দেওয়া, আসল শব্দ থাকলে
+       শুধু-চিহ্নের টোকেন (">>") ফেলে দেওয়া। পুরো লেখাটাই লুপ বা
+       চিহ্ন হলে খালি স্ট্রিং — তখন "বোঝা যায়নি" পথে যায়, কার্ডে
+       আবর্জনা জমে না। */
+    function cleanTranscript(text) {
+      function hasWordChar(w) { return /[\u0980-\u09FFA-Za-z0-9]/.test(w); }
+      var t = String(text || '').replace(/<\|[^|]*\|>/g, ' ');
+      var toks = t.split(/\s+/).filter(function (w) { return w.length > 0; });
+      if (!toks.length) return '';
+      var uniq = {}, i;
+      for (i = 0; i < toks.length; i++) uniq[toks[i]] = true;
+      // লম্বা লেখা অথচ প্রায় সব শব্দই একই — মডেলের লুপ, মানুষের কথা নয়
+      if (toks.length >= 10 && Object.keys(uniq).length / toks.length < 0.3) return '';
+      var kept = [], lastTok = null, lastRun = 0;
+      for (i = 0; i < toks.length; i++) {
+        if (toks[i] === lastTok) lastRun++; else { lastTok = toks[i]; lastRun = 1; }
+        if (lastRun <= 2) kept.push(toks[i]);
+      }
+      var anyWord = false;
+      for (i = 0; i < kept.length; i++) { if (hasWordChar(kept[i])) { anyWord = true; break; } }
+      if (!anyWord) return '';
+      kept = kept.filter(hasWordChar);
+      return kept.join(' ').trim();
     }
 
     /* ---------- উদাহরণ বাক্য (ভয়েস পার্সিং পরীক্ষা) ---------- */
@@ -4286,7 +4334,7 @@
           app: 'khorochpotro', version: 2, encrypted: true, updatedAt: stamp,
           kdf: 'PBKDF2-SHA256', iterations: CRYPTO_ITERATIONS, salt: enc.salt, iv: enc.iv, data: enc.data
         };
-        var body = { message: 'খরচপত্র ব্যাকআপ', content: utf8ToB64(JSON.stringify(wrapper, null, 2)) };
+        var body = { message: 'chore: sync encrypted backup', content: utf8ToB64(JSON.stringify(wrapper, null, 2)) };
         if (sha) body.sha = sha;
         return fetchWithTimeout(GH_CONTENTS_URL, {
           method: 'PUT',
