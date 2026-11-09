@@ -1,0 +1,13 @@
+{
+  "name": "খরচপত্র",
+  "short_name": "খরচপত্র",
+  "description": "দৈনিক খরচ ও জমার হিসাব",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0a1c14",
+  "theme_color": "#0a6347",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
