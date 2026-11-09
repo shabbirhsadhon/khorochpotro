@@ -551,7 +551,7 @@
       .model-update { margin-top: 0; }
       .model-update-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 15px; flex-wrap: wrap; }
       .model-update-head .model-ver { font-size: 13px; font-weight: 600; color: var(--primary); white-space: nowrap; }
-      .model-update .model-text { display: block; margin-top: 4px; }
+      .model-update .model-text { display: block; margin-top: 4px; min-height: 45px; }
       /* নেট না থাকলে মাইক: অ্যাপের লালে (var(--expense)) বদলে দ্রুত
          বাম-ডান কাঁপে, অ্যানিমেশন শেষে আগের রঙে ফিরে আসে */
       .mic-btn.offline-denied, .fab.offline-denied { background: var(--expense); color: var(--on-primary); animation: mic-shake .55s ease; }
@@ -2310,18 +2310,29 @@
         });
       });
     }
+    var parserModelSettleTimer = null;
+    function finishParserModelCheck() {
+      // ফলাফলের লেখা একবারে বসার পর বোতামটা আরও কিছুক্ষণ নিষ্ক্রিয়
+      // থাকে — দ্রুত বারবার ক্লিকে নতুন চেক শুরু হয় না, স্ট্যাটাস
+      // লেখা বারবার বদলে ওভারল্যাপ/ঝাপসা (গ্লিচ) হয় না।
+      if (parserModelSettleTimer) clearTimeout(parserModelSettleTimer);
+      parserModelSettleTimer = setTimeout(function () {
+        parserModelSettleTimer = null;
+        parserModelChecking = false;
+        if (els.parserModelBtn) els.parserModelBtn.disabled = false;
+      }, 1500);
+    }
     function checkParserModelUpdate() {
       if (parserModelChecking) return;
       if (!window.fetch) { setParserModelStatus('এই ব্রাউজারে আপডেট যাচাই চলবে না — বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।'); return; }
       if (!navigator.onLine) { setParserModelStatus('নেট সংযোগ নেই — আপডেট যাচাই করা যাচ্ছে না। বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।'); return; }
       parserModelChecking = true;
-      els.parserModelBtn.disabled = true;
-      setParserModelStatus('গিটহাবে নতুন মডেল আছে কিনা যাচাই হচ্ছে…');
+      if (els.parserModelBtn) els.parserModelBtn.disabled = true;
+      setParserModelStatus('যাচাই করা হচ্ছে…');
       fetchRemoteModel().then(function (m) {
-        parserModelChecking = false;
-        els.parserModelBtn.disabled = false;
         if (!validateParserModel(m)) {
           setParserModelStatus('গিটহাবের মডেল ফাইলটা ঠিকঠাক পড়া যায়নি — বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।');
+          finishParserModelCheck();
           return;
         }
         if (m.version > parserModel.version) {
@@ -2333,10 +2344,10 @@
         } else {
           setParserModelStatus('আপনার মডেলই সর্বশেষ — v' + toBnDigits(String(parserModel.version)) + ' চলছে, নতুন কিছু পাওয়া যায়নি।');
         }
+        finishParserModelCheck();
       }).catch(function () {
-        parserModelChecking = false;
-        els.parserModelBtn.disabled = false;
         setParserModelStatus('আপডেট যাচাই করা যায়নি — গিটহাবে মডেল ফাইলটা (model/parser-model.json) এখনো ওঠেনি, অথবা টোকেন/নেটে সমস্যা। বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।');
+        finishParserModelCheck();
       });
     }
     if (els.parserModelBtn) els.parserModelBtn.addEventListener('click', checkParserModelUpdate);
@@ -3630,6 +3641,32 @@
     }
     // ব্যাকআপে রাখার মতো পরিষ্কার অনুলিপি
     function learnSnapshot() { return sanitizeLearning(learnStore) || learnEmptyStore(); }
+    // ব্যাকআপের লার্নিং স্থানীয় স্টোরে মেলানো: ব্যাকআপে থাকা
+    // প্রতিটি শব্দ/লাইন এখানে না থাকলে যোগ হয়, আর দুই জায়গাতেই
+    // থাকলে সময়ের ছাপে নতুনটাই জেতে — যাতে অন্য ডিভাইসে শেখা
+    // সংশোধন এখানে আসে, আর এখানকার নতুন শেখা হারায় না। কিছু
+    // বদলালে true ফেরে।
+    function mergeLearningFromBackup(raw) {
+      var incoming = sanitizeLearning(raw);
+      if (!incoming) return false;
+      var changed = false;
+      function mergeList(localList, incList, upsert) {
+        incList.forEach(function (item) {
+          var found = null;
+          for (var i = 0; i < localList.length; i++) {
+            if (localList[i][0] === item[0]) { found = localList[i]; break; }
+          }
+          if (!found) { upsert(item[0], item[1], item[2] || 0); changed = true; return; }
+          if (item[1] !== found[1] && (item[2] || 0) >= (found[2] || 0)) {
+            upsert(item[0], item[1], item[2] || 0); changed = true;
+          }
+        });
+      }
+      mergeList(learnStore.words, incoming.words, function (a, b, ts) { learnUpsertWord(learnStore, a, b, ts); });
+      mergeList(learnStore.lines, incoming.lines, function (a, b, ts) { learnUpsertLine(learnStore, a, b, ts); });
+      if (changed) saveLearnStore();
+      return changed;
+    }
 
     var LEARN_PUNCT_RE = /[।,.!?;:"'“”‘’()\[\]]/g;
     // লাইনকে কাঁচা টোকেন + মিল-খোঁজার টোকেন (যতিচিহ্ন ছাড়া,
@@ -3848,44 +3885,15 @@
         if (changed) { saveLearnStore(); noteLearningChanged(); }
       } catch (e) {}
     }
-    // ব্যাকআপ থেকে আসা লার্নিং এখানকার স্টোরে মেলানো: নতুন এন্ট্রি
-    // আসে, একই শব্দ/লাইন দুই জায়গায় থাকলে সময়ের ছাপে নতুনটা থাকে।
-    function mergeLearningFromBackup(raw) {
-      var remote = sanitizeLearning(raw);
-      if (!remote) return false;
-      var changed = false, i, j, found;
-      for (i = 0; i < remote.words.length; i++) {
-        found = -1;
-        for (j = 0; j < learnStore.words.length; j++) if (learnStore.words[j][0] === remote.words[i][0]) { found = j; break; }
-        if (found === -1) { learnStore.words.push(remote.words[i]); changed = true; }
-        else if ((remote.words[i][2] || 0) > (learnStore.words[found][2] || 0)) { learnStore.words[found] = remote.words[i]; changed = true; }
-      }
-      for (i = 0; i < remote.lines.length; i++) {
-        found = -1;
-        for (j = 0; j < learnStore.lines.length; j++) if (learnStore.lines[j][0] === remote.lines[i][0]) { found = j; break; }
-        if (found === -1) { learnStore.lines.push(remote.lines[i]); changed = true; }
-        else if ((remote.lines[i][2] || 0) > (learnStore.lines[found][2] || 0)) { learnStore.lines[found] = remote.lines[i]; changed = true; }
-      }
-      if (changed) {
-        learnStore.words.sort(function (x, y) { return (x[2] || 0) - (y[2] || 0); });
-        learnStore.lines.sort(function (x, y) { return (x[2] || 0) - (y[2] || 0); });
-        while (learnStore.words.length > LEARN_MAX_WORDS) learnStore.words.shift();
-        while (learnStore.lines.length > LEARN_MAX_LINES) learnStore.lines.shift();
-        saveLearnStore();
-      }
-      return changed;
-    }
     function noteLearningChanged() {
-      // লার্নিং বদলালে সেটাও এনক্রিপ্টেড ব্যাকআপে উঠে যাওয়া
-      // দরকার — এন্ট্রির সময়ের ছাপ না বদলে শুধু "সিঙ্ক বাকি"
-      // হিসেবে চিহ্নিত করে পুশের পালা দেওয়া হয়।
-      try {
-        if (typeof syncMeta !== 'undefined' && typeof schedulePush === 'function') {
-          syncMeta.pendingSync = true;
-          saveLocal();
-          schedulePush();
-        }
-      } catch (e) {}
+      // লার্নিং এনক্রিপ্টেড ব্যাকআপের ভেতরেও থাকে — ডিভাইস
+      // বদলালে শেখা যাতে ব্যাকআপ থেকে ফিরে আসে, তাই লার্নিং
+      // বদলালেই হিসাবের মতোই সিঙ্কের পালা দেওয়া হয়।
+      syncMeta.updatedAt = new Date().toISOString();
+      syncMeta.pendingSync = true;
+      saveLocal();
+      renderSyncStatus();
+      schedulePush();
     }
     /* === VOICE-LEARN-END === */
 
@@ -4730,11 +4738,6 @@
     function mergeRemote(remote) {
       var clean = sanitizeBackup(remote.data);
       if (!clean) return false;
-      // লার্নিংও ব্যাকআপের এনক্রিপ্ট করা অংশে থাকে — অন্য
-      // ডিভাইসের শেখা শব্দ/লাইন এখানকার স্টোরে মিলিয়ে নেওয়া
-      // হয়। এন্ট্রি মেলানোর আগেই করা হয়, যাতে শুধু লার্নিং
-      // বদলানো ব্যাকআপও (এন্ট্রির ছাপ একই) এখানে এসে পৌঁছায়।
-      mergeLearningFromBackup(remote.data && remote.data.learning);
       // সময়ের ছাপ দেখে বাদ দেওয়া হয় শুধু তখনই, যখন ব্যাকআপের
       // বিষয়বস্তু base-এর সঙ্গে হুবহু মিলে যায়। ছাপ সমান/পুরনো
       // হলেও বিষয়বস্তু আলাদা হলে মিলিয়ে নেওয়া হয় — নইলে অন্য
@@ -4834,6 +4837,9 @@
           delete state.budgets[k]; changed = true;
         }
       });
+      // ব্যাকআপের লার্নিংও মেলানো হয় — অন্য ডিভাইসে শেখা
+      // সংশোধন এখানে আসে, এখানকার নতুন শেখা হারায় না।
+      if (mergeLearningFromBackup(remote.data && remote.data.learning)) changed = true;
       setBaseFromCurrent(remote.updatedAt || syncMeta.baseUpdatedAt);
       // base এখন ব্যাকআপের এন্ট্রি তালিকাই
       syncMeta.baseIds = clean.entries.map(function (e) { return e.id; });
@@ -4853,11 +4859,12 @@
       // স্থানীয় হিসাব খালি থাকলে ব্যাকআপটাই পুরোপুরি বসে
       var clean = sanitizeBackup(remote.data);
       if (!clean) return;
-      // ব্যাকআপে থাকা লার্নিংটাও ফিরে আসে (নতুন ডিভাইসে রিস্টোর)
-      mergeLearningFromBackup(remote.data && remote.data.learning);
       state.entries = clean.entries;
       state.budgets = clean.budgets;
       state.nextId = clean.nextId;
+      // ব্যাকআপের লার্নিংও ফেরানো হয় — নতুন ডিভাইসে হিসাবের
+      // সঙ্গে শেখা সংশোধনগুলোও ফিরে আসে।
+      mergeLearningFromBackup(remote.data && remote.data.learning);
       syncMeta.baseUpdatedAt = remote.updatedAt || null;
       syncMeta.baseIds = clean.entries.map(function (e) { return e.id; });
       syncMeta.baseBudgets = clean.budgets;
