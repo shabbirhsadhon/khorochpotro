@@ -566,22 +566,6 @@
       }
       .gh-confirm { margin-top: 12px; border-radius: var(--radius-sm); padding: 12px 14px; background: var(--amber-bg); border: 1px solid var(--line); font-size: 14.5px; line-height: 1.6; }
       .gh-confirm p { margin: 0 0 10px; }
-      .examples { text-align: left; margin-top: 14px; }
-      .examples .ex-title { font-size: 13.5px; font-weight: 700; color: var(--ink-3); margin-bottom: 6px; }
-      .examples button {
-        display: block; width: 100%; text-align: left; background: var(--surface-2); border: 1px solid var(--line);
-        border-radius: var(--radius-sm); padding: 9px 12px; margin-bottom: 6px; font-size: 14.5px; color: var(--ink-2);
-      }
-      .examples button:hover { background: var(--surface-3); color: var(--ink); }
-      /* উদাহরণ: সামনে মাত্র ৩টা, বাকিগুলো এই বাক্সের ভেতরেই স্ক্রলে */
-      #exampleList {
-        max-height: 143px; overflow-y: auto; overscroll-behavior: contain;
-        scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
-        -webkit-overflow-scrolling: touch; padding-right: 2px;
-      }
-      #exampleList::-webkit-scrollbar { width: 5px; }
-      #exampleList::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
-      #exampleList button:last-child { margin-bottom: 0; }
 
       /* ---------- Budget ---------- */
       .budget-row { display: flex; gap: 8px; }
@@ -751,7 +735,7 @@
       .field, .filter-row select, .search-wrap, .legend, .legend-row > * { min-width: 0; }
       .day-head { flex-wrap: wrap; }
       .day-head .d-total { white-space: normal; }
-      .examples button, .voice-detected, .voice-live, .gh-confirm, .voice-notice { overflow-wrap: break-word; }
+      .voice-detected, .voice-live, .gh-confirm, .voice-notice { overflow-wrap: break-word; }
       .filter-row select { flex: 1 1 130px; }
       @media (max-width: 640px) {
         .wrap { padding: 14px 12px 100px; }
@@ -786,6 +770,12 @@
       .field-status { font-size: 12.5px; font-weight: 500; color: var(--ink-3); white-space: nowrap; }
       .backup-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
       .backup-actions .hint { margin: 0; }
+      .backup-head-side { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+      /* সেটিংস গোটানো/খোলা: শুধু ইনপুটের অংশটা মসৃণভাবে গুটিয়ে যায় —
+         টোকেন/পাসফ্রেজ আর সিঙ্কের কাজে কোনো হাত পড়ে না */
+      .backup-body { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows .35s ease, opacity .28s ease; }
+      .backup-body-inner { overflow: hidden; min-height: 0; }
+      .backup-panel.minimized .backup-body { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
       .warn-line { color: var(--amber); font-weight: 600; }
       .help-details { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 10px; }
       .help-details summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--primary); list-style: none; min-height: 32px; display: flex; align-items: center; }
@@ -798,7 +788,6 @@
       .model-text { display: inline; margin: 0; }
       .model-update .model-text { display: block; }
       .voice-panel .hint { margin-bottom: 2px; }
-      .examples { margin-top: 10px; }
 
       /* ---------- ইতিহাসের সারি: পুরো বিবরণ ও পুরো অঙ্ক ----------
          বিবরণ আর “…” দিয়ে কাটা হয় না — যত লম্বাই হোক, মোড়ক খেয়ে পুরোটা
@@ -945,8 +934,6 @@
       .dd-btn:active { transform: scale(.98); }
       .dd-item { transition: background-color .12s ease, transform .1s ease; }
       .dd-item:active { transform: scale(.98); }
-      .examples button { transition: background-color .15s ease, color .15s ease, transform .12s ease; }
-      .examples button:active { transform: scale(.98); }
       .seg button { transition: color .2s ease, transform .12s ease; }
       .seg button:active { transform: scale(.95); }
       .vp-edit .vp-seg button { transition: color .2s ease, background-color .2s ease, transform .12s ease; }
@@ -1029,6 +1016,14 @@
         }
         .grid > .stack { display: contents; }
         .voice-panel { grid-area: voice; }
+        /* উদাহরণ অংশ সরানোর পর ভয়েস কার্ডটা গ্রিডের পুরো উচ্চতায়
+           টানা থাকে — ভেতরের বাড়তি জায়গাটা যাতে নিচে জমে বাজে ফাঁক
+           না দেখায়, কার্ডটা ফ্লেক্স কলাম: মডেল বাক্সটা নিচে ঠেকে
+           থাকে, বাকি কনটেন্ট ওপরে আগের মতোই সাজানো */
+        .voice-panel { display: flex; flex-direction: column; }
+        .voice-panel > button { align-self: center; }
+        .voice-panel .voice-status { margin-bottom: 14px; }
+        .voice-panel .model-box { margin-top: auto; }
         .history-panel { grid-area: history; }
         #entryFormPanel { grid-area: form; }
         .budget-panel { grid-area: budget; }
@@ -1043,7 +1038,7 @@
       /* ---------- পিডিএফ বোতাম: হেডার থেকে সরিয়ে ----------
          মোবাইলে বোতামটা গিটহাব ব্যাকআপ অংশের ঠিক ওপরের সারিতে
          থাকে (পুরো প্রস্থ জুড়ে); ডেস্কটপে (≥960px) স্ক্রিপ্ট
-         বোতামটাকে হিসাবের ইতিহাস কার্ডের ভেতরে CSV বোতামগুলোর
+         বোতামটাকে ট্রানজেকশন হিস্টোরি কার্ডের ভেতরে CSV বোতামগুলোর
          নিচের ফাঁকা জায়গায় বসিয়ে দেয়। */
       .pdf-slot { margin-top: 14px; }
       .pdf-slot #pdfBtn { width: 100%; justify-content: center; }
@@ -1129,7 +1124,7 @@
           <section class="card panel voice-panel" aria-label="কণ্ঠ দিয়ে এন্ট্রি">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              বলেই হিসাব যোগ করুন
+              ভয়েস টাইপিং
             </h2>
             <button class="mic-btn" id="micBtn" type="button" aria-label="কণ্ঠ দিয়ে এন্ট্রি শুরু করুন">
               <span class="ico-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
@@ -1150,17 +1145,13 @@
                 <button class="btn btn-outline btn-sm" id="parserModelBtn" type="button">মডেল আপডেট</button>
               </div>
             </div>
-            <div class="examples">
-              <div class="ex-title">উদাহরণ</div>
-              <div id="exampleList"></div>
-            </div>
           </section>
 
           <!-- Manual form -->
           <section class="card panel" id="entryFormPanel" aria-label="হাতে এন্ট্রি">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-              <span id="formTitle">হাতে এন্ট্রি যোগ করুন</span>
+              <span id="formTitle">ম্যানুয়াল এন্ট্রি</span>
             </h2>
             <form id="entryForm" novalidate>
               <div class="seg" id="typeSeg" role="group" aria-label="এন্ট্রির ধরন">
@@ -1222,10 +1213,10 @@
         <!-- Right column -->
         <div class="stack">
           <!-- History -->
-          <section class="card panel history-panel" aria-label="হিসাবের ইতিহাস">
+          <section class="card panel history-panel" aria-label="ট্রানজেকশন হিস্টোরি">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-              হিসাবের ইতিহাস
+              ট্রানজেকশন হিস্টোরি
             </h2>
             <div class="history-tools">
               <div class="search-wrap">
@@ -1269,7 +1260,7 @@
 
       <!-- মাসিক পিডিএফ বোতাম: মোবাইলে এখানে — গিটহাব ব্যাকআপের
            ঠিক ওপরে; ডেস্কটপে (≥960px) স্ক্রিপ্ট বোতামটাকে
-           হিসাবের ইতিহাস কার্ডে CSV বোতামগুলোর নিচে সরিয়ে নেয় -->
+           ট্রানজেকশন হিস্টোরি কার্ডে CSV বোতামগুলোর নিচে সরিয়ে নেয় -->
       <div class="pdf-slot" id="pdfSlotMobile">
         <button class="btn btn-primary" id="pdfBtn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1278,14 +1269,18 @@
       </div>
 
       <!-- GitHub backup — কমপ্যাক্ট: শুধু ইনপুট, সংরক্ষণ আর এক লাইনের অবস্থা -->
-      <section class="card panel backup-panel" aria-label="গিটহাব ব্যাকআপ">
+      <section class="card panel backup-panel" id="backupPanel" aria-label="গিটহাব ব্যাকআপ">
         <div class="backup-head">
           <h2>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
             গিটহাব ব্যাকআপ
           </h2>
-          <p class="sync-line" id="ghSyncStatus"></p>
+          <div class="backup-head-side">
+            <p class="sync-line" id="ghSyncStatus"></p>
+            <button class="btn btn-tonal btn-sm" type="button" id="ghMinToggle" hidden style="display:none" aria-expanded="true">minimize করুন</button>
+          </div>
         </div>
+        <div class="backup-body" id="ghSettingsBody"><div class="backup-body-inner">
         <div class="backup-grid">
           <div class="field">
             <label for="ghTokenInput">গিটহাব টোকেন <span class="field-status" id="ghTokenStatus"></span></label>
@@ -1311,6 +1306,7 @@
             <p>টোকেন ও পাসফ্রেজ শুধু এই ডিভাইসেই থাকে। ব্যাকআপ গিটহাবে ওঠার আগে পাসফ্রেজ দিয়ে এনক্রিপ্ট হয়।</p>
           </div>
         </details>
+        </div></div>
       </section>
 
       <footer class="page">
@@ -1533,11 +1529,12 @@
      'budgetRemain', 'budgetMonthLbl',
      'searchInput', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
      'shownExpense', 'csvBtn', 'importBtn', 'importFile', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
-     'voiceLiveText', 'voiceDetected', 'exampleList', 'toast', 'voiceNotice', 'micEnableBtn',
+     'voiceLiveText', 'voiceDetected', 'toast', 'voiceNotice', 'micEnableBtn',
      'fabSyncIcon', 'fabSyncText', 'micSyncIcon', 'restoreOverlay',
      'parserModelVersion', 'parserModelStatus', 'parserModelBtn',
      'ghTokenInput', 'ghTokenSaveBtn', 'ghTokenClearBtn', 'ghTokenStatus',
-     'ghPassInput', 'ghPassSaveBtn', 'ghPassClearBtn', 'ghPassStatus', 'ghSyncStatus', 'ghStatus'
+     'ghPassInput', 'ghPassSaveBtn', 'ghPassClearBtn', 'ghPassStatus', 'ghSyncStatus', 'ghStatus',
+     'ghMinToggle', 'backupPanel', 'ghSettingsBody'
     ].forEach(function (id) { els[id] = $(id); });
 
     /* ---------- টোস্ট ---------- */
@@ -2075,6 +2072,251 @@
       if (type === 'expense' && hasAnyWord(text, BUY_WORDS)) return 'কেনাকাটা';
       return 'অন্যান্য';
     }
+    /* ============================================================
+       বিবরণের সারাংশ — buildVoiceSummary(text, type, category)
+       বিবরণ কখনোই কাঁচা বাক্য থেকে সংখ্যা কেটে বানানো হয় না
+       (আগের বাগ: “পরোটা খাইলাম ৫০ টাকার” -> “পরোটা খাইলাম
+       টাকার”)। বদলে পার্স করা বিষয়বস্তু থেকে — পার্সারের নিজের
+       কীওয়ার্ড-জ্ঞান দিয়ে — সবচেয়ে নির্দিষ্ট মিলে যাওয়া
+       জিনিসটা দিয়ে ছোট পরিষ্কার বিশেষ্য-বাক্যাংশ (১-৪ শব্দ)
+       বানানো হয়। এটাই এন্ট্রির শিরোনাম/লেবেল: ভয়েস প্রিভিউয়ে
+       আর হিস্টোরি তালিকায় এটাই দেখায়।
+       ============================================================ */
+    // কীওয়ার্ড হুবহু বসালে ভাঙা/অস্বাভাবিক শোনায় — সেগুলোর
+    // পরিষ্কার রূপ (বিভক্তি-লাগা বা ক্রিয়া-লাগা কীওয়ার্ডের জন্য)
+    var SUMMARY_PHRASE_MAP = {
+      'বাজারের': 'বাজার', 'বাজার করা': 'বাজার', 'বাজার করলাম': 'বাজার', 'বাজার থেকে': 'বাজার',
+      'দুপুরের খাওয়া': 'দুপুরের খাবার', 'রাতের খাওয়া': 'রাতের খাবার',
+      'খাবারের': 'খাবার', 'চা ': 'চা', 'হোটেলে খা': 'হোটেল',
+      'বিলের টাকা': 'বিল', 'কারেন্টের টাকা': 'কারেন্ট বিল', 'কারেন্টের': 'কারেন্ট বিল', 'ডিশের': 'ডিশ বিল',
+      'হোস্টেলের': 'হোস্টেল', 'বাসে': 'বাস', 'শপিংয়ে': 'শপিং',
+      'ভার্সিটির': 'ভার্সিটি', 'স্কুলের': 'স্কুল', 'কলেজের': 'কলেজ', 'মাদ্রাসার': 'মাদ্রাসা',
+      'লাইব্রেরির': 'লাইব্রেরি', 'কোচিংয়ের': 'কোচিং', 'বইয়ের': 'বই', 'ডাক্তারের': 'ডাক্তার',
+      'তেলের': 'তেল', 'ফোনের': 'ফোন', 'পরীক্ষার': 'পরীক্ষা', 'ল্যাবের': 'ল্যাব',
+      'প্রিন্টের': 'প্রিন্ট', 'আবেদনের': 'আবেদন ফি', 'রেজিস্ট্রেশনের': 'রেজিস্ট্রেশন',
+      'সেমিস্টারের': 'সেমিস্টার', 'অ্যাসাইনমেন্টের': 'অ্যাসাইনমেন্ট', 'ফরম ফিলাপের': 'ফরম ফিলাপ',
+      'ভর্তির': 'ভর্তি', 'কোর্সের': 'কোর্স', 'টিউশনের': 'টিউশন', 'প্রাইভেটের': 'প্রাইভেট',
+      'মায়ের': 'মা', 'বাবার': 'বাবা', 'মামার': 'মামা', 'খালার': 'খালা', 'চাচার': 'চাচা',
+      'ফুফুর': 'ফুফু', 'নানার': 'নানা', 'নানির': 'নানি', 'দাদার': 'দাদা', 'দাদির': 'দাদি',
+      'আপুর': 'আপু', 'আব্বুর': 'আব্বু', 'আম্মুর': 'আম্মু', 'ভাইয়ের': 'ভাই', 'বোনের': 'বোন',
+      'ছাত্রের': 'ছাত্র', 'ছাত্রীর': 'ছাত্রী', 'ক্লায়েন্টের': 'ক্লায়েন্ট', 'বায়ারের': 'বায়ার',
+      'পারফিউমের': 'পারফিউম', 'প্রজেক্টের': 'প্রজেক্ট', 'কনটেন্টের': 'কনটেন্ট',
+      'ওয়েবসাইটের': 'ওয়েবসাইট', 'ওয়েবসাইট বানিয়ে': 'ওয়েবসাইট', 'এডিটিংয়ের': 'এডিটিং',
+      'প্রোগ্রামিংয়ের': 'প্রোগ্রামিং', 'কোডিংয়ের': 'কোডিং', 'মার্কেটিংয়ের': 'মার্কেটিং',
+      'ডিজাইনের': 'ডিজাইন', 'লোগোর': 'লোগো', 'উপহারের': 'উপহার', 'গিফটের': 'গিফট',
+      'জন্মদিনের': 'জন্মদিন', 'পুরস্কারের': 'পুরস্কার', 'লটারির': 'লটারি',
+      'আত্মীয়ের': 'আত্মীয়', 'শ্বশুরের': 'শ্বশুর', 'শাশুড়ির': 'শাশুড়ি',
+      'স্ত্রীর': 'স্ত্রী', 'স্বামীর': 'স্বামী', 'ছেলের': 'ছেলে', 'মেয়ের': 'মেয়ে',
+      'জামাইয়ের': 'জামাই', 'দুলাভাইয়ের': 'দুলাভাই', 'ভাবির': 'ভাবি',
+      'অনলাইনে কিন': 'অনলাইন কেনাকাটা', 'ট্রেড করে': 'ট্রেডিং', 'ডলার বেচে': 'ডলার বিক্রি',
+      'পড়িয়ে': 'পড়ানো', 'পড়ানোর': 'পড়ানো', 'পড়াই': 'পড়ানো', 'পড়িয়ে দিই': 'পড়ানো',
+      'ভ্রমণে': 'ভ্রমণ', 'ট্যুরে': 'ট্যুর', 'মেলায়': 'মেলা', 'রিসোর্টে': 'রিসোর্ট',
+      'আড্ডায়': 'আড্ডা', 'ঘুরতে': 'ঘোরাঘুরি', 'বেড়াতে': 'বেড়ানো', 'বেড়াতে গিয়ে': 'বেড়ানো',
+      'খেলা দেখ': 'খেলা', 'খেলা দেখতে': 'খেলা', 'ম্যাচ দেখ': 'ম্যাচ'
+    };
+    // যেসব কীওয়ার্ড শুধু ক্রিয়া/খণ্ডাংশ — বিবরণ হতে পারে না
+    var SUMMARY_KEYWORD_DROP = {
+      'খেয়েছি': 1, 'খেয়েছে': 1, 'খাওয়া': 1, 'খাওয়ার': 1, 'খেলাম': 1, 'খেলো': 1,
+      'খাইছি': 1, 'খাইছে': 1, 'খেয়ে': 1, 'খাওয়ালাম': 1, 'খাওয়ানো': 1, 'ট্রিট': 1
+    };
+    function summaryTokens(text) {
+      return normalizeDigits(String(text || '')).replace(/[।,.!?;:"'“”‘’()\[\]\-]/g, ' ').split(/\s+/).filter(Boolean);
+    }
+    // টোকেনটা সংখ্যা (অঙ্কে বা কথায়) কিনা — পুরনো বিবরণ-ছাঁকনির নিয়মই
+    function isSummaryNumberToken(t) {
+      if (/^\d/.test(t)) return true;
+      if (Object.prototype.hasOwnProperty.call(WORD_NUM, t)) return true;
+      if (Object.prototype.hasOwnProperty.call(SPECIAL_NUM, t)) return true;
+      if (t === 'শত' || t === 'শতক' || t === 'শ' || t === 'শো' || t === 'হাজার' || t === 'লাখ' || t === 'লক্ষ' || t === 'কোটি' || t === 'সাড়ে' || t === 'পৌনে' || t === 'সোয়া' || t === 'পয়সা') return true;
+      var sm = t.match(/^(.+?)(শো|শ)$/);
+      if (sm && (Object.prototype.hasOwnProperty.call(WORD_NUM, sm[1]) || Object.prototype.hasOwnProperty.call(NUM_EXTRA_PREFIX, sm[1]))) {
+        var sb = Object.prototype.hasOwnProperty.call(WORD_NUM, sm[1]) ? WORD_NUM[sm[1]] : NUM_EXTRA_PREFIX[sm[1]];
+        if (sb >= 1 && sb <= (sm[2] === 'শো' ? 99 : 9)) return true;
+      }
+      var mm = t.match(/^(.+?)(হাজার|লাখ|লক্ষ|কোটি)$/);
+      if (mm && (/^\d+$/.test(mm[1]) || Object.prototype.hasOwnProperty.call(WORD_NUM, mm[1]) || Object.prototype.hasOwnProperty.call(SPECIAL_NUM, mm[1]) || Object.prototype.hasOwnProperty.call(NUM_EXTRA_PREFIX, mm[1]))) return true;
+      return false;
+    }
+    // কীওয়ার্ডের পরিষ্কার বিবরণ-রূপ; ক্রিয়া/খণ্ডাংশ হলে ''
+    function cleanSummaryKeyword(kw) {
+      var k = String(kw || '').trim();
+      if (!k) return '';
+      if (SUMMARY_KEYWORD_DROP[k]) return '';
+      if (Object.prototype.hasOwnProperty.call(SUMMARY_PHRASE_MAP, k)) return SUMMARY_PHRASE_MAP[k];
+      // শেষে লেগে থাকা কেনা/দেওয়ার ক্রিয়া-খণ্ড ঝেড়ে ফেলা হয়
+      // (“তেল কিন” -> “তেল”, “বিল দিলাম” -> “বিল”)
+      k = k.replace(/\s+(কিন|খে|দিলাম|দিয়েছি|দিছি|করলাম|করা)$/, '').trim();
+      if (!k || SUMMARY_KEYWORD_DROP[k]) return '';
+      return k;
+    }
+    // কীওয়ার্ড মিলেছে কিনা — গার্ডওয়ালা শব্দ গার্ড দিয়েই যাচাই হয়
+    function summaryKeywordHit(t, kw) {
+      if (Object.prototype.hasOwnProperty.call(CATEGORY_WORD_GUARDS, kw)) return CATEGORY_WORD_GUARDS[kw](t);
+      return t.indexOf(kw) !== -1;
+    }
+    // বিবরণে বসতে পারে না এমন শব্দ — সব ধরনের ক্রিয়ার রূপ, অব্যয়,
+    // সর্বনাম, টাকা-পরিবার আর তারিখের শব্দ। ধরন-শনাক্তের তালিকাগুলো
+    // থেকেই বানানো, যাতে নতুন ক্রিয়া-রূপ এলে এখানেও ধরা পড়ে।
+    var SUMMARY_STOP_WORDS = (function () {
+      var set = {};
+      var lists = [GIVE_1ST, GIVE_3RD, SEND_1ST, SEND_3RD, RECEIVE_WORDS, ARRIVE_WORDS,
+        EARN_WORDS, DEPOSIT_WORDS, LOAN_IN_WORDS, TAKE_WORDS, TAKE_3RD_FORMS,
+        EAT_WORDS, BUY_WORDS, EXPENSE_STRONG];
+      for (var i = 0; i < lists.length; i++) {
+        for (var j = 0; j < lists[i].length; j++) {
+          var parts = String(lists[i][j]).split(/\s+/);
+          for (var k = 0; k < parts.length; k++) set[parts[k]] = 1;
+        }
+      }
+      var extra = ['খরচ', 'খরচা', 'ব্যয়', 'হয়েছে', 'হইছে', 'হয়েছিল', 'হলো', 'হইলো', 'করেছি', 'করলাম', 'করছি', 'করতে', 'করেছে', 'করলো', 'করালাম',
+        'খাইলাম', 'খাইলো', 'খাইলেন', 'খাচ্ছি', 'খাচ্ছে', 'খাবো', 'খেতে', 'দেখলাম', 'দেখেছি', 'শুনলাম', 'বললাম', 'বলেছি', 'পড়লাম', 'পড়েছি', 'লিখলাম',
+        'আনলাম', 'আনছি', 'আনেছি', 'রাখলাম', 'রেখেছি', 'আসলাম', 'এলাম', 'উঠলাম', 'নামলাম',
+        'গেছে', 'গেল', 'গেলাম', 'গিয়ে', 'গিয়েছিল', 'এসেছে', 'এসে', 'ছিল', 'ছিলাম', 'ছিলো', 'আছে', 'হবে', 'হয়',
+        'থেকে', 'কাছ', 'কাছে', 'জন্য', 'সাথে', 'নিয়ে', 'দিয়ে', 'করে', 'হয়ে', 'উপরে', 'ভিতরে', 'বাইরে', 'মধ্যে', 'দিকে',
+        'আর', 'ও', 'এবং', 'কিন্তু', 'মোট', 'মাত্র', 'শুধু', 'কিছু', 'অনেক', 'একটি', 'একজন',
+        'আজ', 'আজকে', 'গতকাল', 'গত', 'পরশু', 'গতপরশু', 'আগামীকাল', 'আগামী', 'আগামীপরশু',
+        'আমি', 'আমার', 'আমাকে', 'আমারে', 'আমায়', 'সে', 'তার', 'তারা', 'এই', 'ওই', 'সেটা', 'এটা', 'ওটা',
+        'টাকা', 'টাকার', 'টাকায়', 'টাকাটা'];
+      for (var e = 0; e < extra.length; e++) set[extra[e]] = 1;
+      return set;
+    })();
+    // টোকেনটা অর্থবহ বিশেষ্য-জাতীয় কিনা (সংখ্যা/ক্রিয়া/অব্যয় নয়)
+    function isSummaryContentToken(t) {
+      if (!t || t.length < 2) return false;
+      if (isSummaryNumberToken(t)) return false;
+      if (SUMMARY_STOP_WORDS[t]) return false;
+      return true;
+    }
+    // শুধু ক্রিয়ার রূপ — সারাংশের শেষ শব্দ হিসেবে এগুলো কখনোই
+    // বৈধ নয় (বিশেষ্য যেমন খাবার/বিল/ধার/নাস্তা এখানে নেই, কারণ
+    // সেগুলো দিয়ে লেবেল শেষ হতেই পারে: “দুপুরের খাবার”)
+    var SUMMARY_VERB_WORDS = (function () {
+      var set = {};
+      var verbs = ['খাইলাম', 'খাইলো', 'খাইলেন', 'খাইছি', 'খাইছে', 'খাইছিল', 'খেয়েছি', 'খেয়েছে', 'খেয়েছিল', 'খেলাম', 'খেলো', 'খাচ্ছি', 'খাচ্ছে', 'খেয়ে', 'খাওয়া',
+        'দিলাম', 'দিয়েছি', 'দিছি', 'দিয়েছে', 'দিছে', 'দিচ্ছে', 'দিলো', 'দিল', 'দিয়েছিল', 'দিছিল',
+        'নিলাম', 'নিছি', 'নিছে', 'নিয়েছি', 'নিয়েছে', 'নিলো', 'নিলেন', 'নিয়েছিল',
+        'পাইছি', 'পাইসি', 'পেয়েছি', 'পেলাম', 'পাইলাম', 'পেয়েছিল',
+        'পাঠিয়েছি', 'পাঠাইছি', 'পাঠালাম', 'পাঠিয়েছে', 'পাঠাইছে', 'পাঠালো',
+        'করেছি', 'করলাম', 'করছি', 'করেছে', 'করলো', 'করতে', 'কিনলাম', 'কিনেছি', 'কিনছি', 'কিনলো', 'কিনতে', 'কিনে',
+        'হয়েছে', 'হইছে', 'হলো', 'হইলো', 'হয়েছিল', 'গেছে', 'গেল', 'গেলাম', 'গিয়ে', 'এসেছে', 'এসে',
+        'ছিল', 'ছিলাম', 'ছিলো', 'আছে', 'হবে', 'খরচ', 'ব্যয়'];
+      for (var i = 0; i < verbs.length; i++) set[verbs[i]] = 1;
+      return set;
+    })();
+    function buildVoiceSummary(text, type, category) {
+      var t = String(text || '');
+      var desc = '';
+      // ১) ক্রিপ্টো / P2P — “বাইনান্স P2P”-ই সবচেয়ে নির্দিষ্ট লেবেল
+      if (t.indexOf('P2P') !== -1) {
+        desc = t.indexOf('বাইনান্স') !== -1 ? 'বাইনান্স P2P' : 'P2P';
+      }
+      // ২) অন্য কেউ আমার থেকে ধার/টাকা নিয়েছে — “ওমরের ধার”
+      if (!desc && thirdPartyTookFromMe(t)) {
+        var loanWord = t.indexOf('লোন') !== -1 ? 'লোন' : (t.indexOf('ঋণ') !== -1 ? 'ঋণ' : 'ধার');
+        var toks0 = summaryTokens(t);
+        var nameTok = '';
+        for (var n = 0; n < toks0.length; n++) {
+          var tk = toks0[n];
+          if (tk === 'আমার' || tk === 'আমি' || tk === 'থেকে' || tk === 'কাছ' || tk === 'ধার' || tk === 'লোন' || tk === 'ঋণ') continue;
+          if (isSummaryContentToken(tk)) { nameTok = tk; break; }
+        }
+        if (nameTok) {
+          var lastCh = nameTok.charAt(nameTok.length - 1);
+          var gen = 'া ি ী ু ূ ৃ ে ৈ ো ৌ'.replace(/\s/g, '').indexOf(lastCh) !== -1 ? 'র' : 'ের';
+          desc = nameTok + gen + ' ' + loanWord;
+        } else desc = loanWord;
+      }
+      // ৩) খাবার — খাবারের নামগুলোই লেবেল। একাধিক নাম থাকলে জোড়া
+      //    হয় (“পরোটা ও ডিম”), ক্যান্টিনের কথা থাকলে সেটা আগে বসে।
+      //    একটা নাম পাওয়া গেলে মনে রাখা হয় — নিচের ধাপে আরও
+      //    নির্দিষ্ট বাক্যাংশ (যেমন “সকালের নাস্তা”) মিললে সেটাই জেতে।
+      var foodSingle = '';
+      if (!desc && type === 'expense' && category === 'খাবার') {
+        var found = [];
+        for (var f = 0; f < FOOD_NAME_WORDS.length; f++) {
+          var fw = FOOD_NAME_WORDS[f];
+          var pos = -1;
+          if (Object.prototype.hasOwnProperty.call(CATEGORY_WORD_GUARDS, fw)) {
+            if (CATEGORY_WORD_GUARDS[fw](t)) pos = t.indexOf(fw);
+          } else pos = t.indexOf(fw);
+          if (pos !== -1) found.push({ w: fw, pos: pos });
+        }
+        if (hasTeaWord(t)) found.push({ w: 'চা', pos: Math.max(t.indexOf('চা'), 0) });
+        if (hasWaterWord(t)) found.push({ w: 'পানি', pos: Math.max(t.indexOf('পানি'), 0) });
+        found.sort(function (a, b) { return a.pos - b.pos; });
+        var items = [];
+        for (var fi = 0; fi < found.length; fi++) if (items.indexOf(found[fi].w) === -1) items.push(found[fi].w);
+        if (items.length >= 2) {
+          var canteen = (t.indexOf('ক্যান্টিনে') !== -1 || t.indexOf('ক্যান্টিন') !== -1);
+          var take = canteen ? items.slice(0, 2) : items.slice(0, 3);
+          desc = (canteen ? 'ক্যান্টিনে ' : '') + take.join(' ও ');
+        } else if (items.length === 1) {
+          foodSingle = items[0];
+        }
+      }
+      // ৪) ক্যাটাগরির সবচেয়ে নির্দিষ্ট (দীর্ঘতম) মিলে যাওয়া কীওয়ার্ড
+      if (!desc) {
+        var ruleList = null;
+        var allRules = type === 'income' ? INCOME_CAT_RULES : CAT_RULES;
+        for (var r = 0; r < allRules.length; r++) if (allRules[r][0] === category) { ruleList = allRules[r][1]; break; }
+        var best = null;
+        if (ruleList) {
+          for (var k2 = 0; k2 < ruleList.length; k2++) {
+            var kw = ruleList[k2];
+            if (!summaryKeywordHit(t, kw)) continue;
+            var cleaned = cleanSummaryKeyword(kw);
+            if (!cleaned) continue;
+            var score = String(kw).trim().length;
+            if (!best || score > best.score) best = { kw: String(kw).trim(), phrase: cleaned, score: score };
+          }
+        }
+        // “বাজারে … খরচ” — আলাদা শব্দ হিসেবে “বাজার” মিললেই লেবেল
+        if (type === 'expense' && category === 'বাজার-সদাই' && hasStandaloneBazar(t)) {
+          if (!best || best.score < 5) best = { kw: 'বাজার', phrase: 'বাজার', score: 5 };
+        }
+        if (best) {
+          desc = best.phrase;
+          // এক-শব্দের লেবেলের ঠিক পরের বিশেষ্যটা জোড়া হয় —
+          // “টেবিল ল্যাম্প”, “রিকশা ভাড়া”, “ইন্টারনেট বিল”।
+          // ক্রিয়ার শেষ-রূপ (লাম/লো/ছে/ছি...) কখনোই জুড়বে না,
+          // আর বহু-শব্দের কীওয়ার্ড মিললে সম্প্রসারণ হয় না
+          // (“বাজার থেকে” মিলে “বাজার চাল” হবে না)।
+          if (desc.indexOf(' ') === -1 && best.kw.indexOf(' ') === -1) {
+            var at = t.indexOf(best.kw);
+            if (at !== -1) {
+              var afterTok = summaryTokens(t.slice(at + best.kw.length))[0];
+              if (afterTok && isSummaryContentToken(afterTok) && desc !== afterTok &&
+                  !/(লাম|লেন|লো|ছি|ছে|ছেন|য়েছি|য়েছে)$/.test(afterTok)) {
+                desc = desc + ' ' + afterTok;
+              }
+            }
+          }
+        }
+        // খাবারের একটিমাত্র নাম পাওয়া গেলে সেটাই — সাধারণ
+        // “খাবার” লেবেলের চেয়ে নির্দিষ্ট নামটাই ভালো
+        if (foodSingle && (!desc || desc === 'খাবার')) desc = foodSingle;
+      }
+      // ৫) কিছুই না মিললে — বাক্যের প্রথম দিকের অর্থবহ শব্দগুলো
+      //    (সংখ্যা/ক্রিয়া/টাকা বাদে) দিয়ে ছোট লেবেল
+      if (!desc) {
+        var toks = summaryTokens(t);
+        var keep = [];
+        for (var i = 0; i < toks.length && keep.length < 3; i++) {
+          if (isSummaryContentToken(toks[i])) keep.push(toks[i]);
+        }
+        desc = keep.join(' ');
+      }
+      if (!desc) desc = category;
+      // শেষ নিরাপত্তা: লেবেল কখনোই “টাকা/টাকার” দিয়ে শেষ হয় না,
+      // ঝুলন্ত ক্রিয়া নিয়েও বসে না — সেক্ষেত্রে ক্যাটাগরিই লেবেল।
+      // যাচাইটা শুধু ক্রিয়ার তালিকা দিয়ে হয় — বিশেষ্য (খাবার/
+      // বিল/ধার/নাস্তা...) বৈধ শেষ-শব্দ, থামানো হয় না।
+      var dtoks = desc.split(/\s+/);
+      var lastTok = dtoks[dtoks.length - 1];
+      if (lastTok === 'টাকা' || lastTok === 'টাকার' || SUMMARY_VERB_WORDS[lastTok]) desc = category;
+      if (desc.length > 40) desc = desc.slice(0, 40).trim();
+      return desc;
+    }
     function parseVoiceText(rawText) {
       // Binance/P2P-এর ভুল-শোনা রূপগুলো শুরুতেই canonical করা হয়,
       // যাতে পরিমাণ/ধরন/ক্যাটাগরি/বিবরণ সব জায়গায় ঠিক শব্দটাই বসে
@@ -2116,26 +2358,10 @@
       // পাঠাইছে/পাইছি সব রূপসহ), আমি নিজে দিলে/খরচ করলেই খরচ
       var type = detectType(text);
       var category = detectCategory(text, type);
-      // বিবরণ: পরিমাণ (সংখ্যা ও কথায়), "টাকা" আর খরচের বাক্যাংশ ঝেড়ে বাকিটা
-      var descTokens = normalized.replace(/[।,.!?;:"'()]/g, ' ').split(/\s+/).filter(Boolean).filter(function (t) {
-        if (/^\d/.test(t)) return false;
-        if (t === 'টাকা' || t === 'টাকায়' || t === 'খরচ' || t === 'হয়েছে' || t === 'করেছি' || t === 'হলো') return false;
-        if (t === 'গতকাল' || t === 'গতপরশু' || t === 'গত' || t === 'পরশু' || t === 'আজকে' || t === 'আজ' || t === 'আগামীকাল' || t === 'আগামীপরশু' || t === 'আগামী') return false;
-        if (Object.prototype.hasOwnProperty.call(WORD_NUM, t)) return false;
-        if (Object.prototype.hasOwnProperty.call(SPECIAL_NUM, t)) return false;
-        if (t === 'শত' || t === 'শতক' || t === 'শ' || t === 'শো' || t === 'হাজার' || t === 'লাখ' || t === 'লক্ষ' || t === 'কোটি' || t === 'সাড়ে' || t === 'পৌনে' || t === 'সোয়া' || t === 'পয়সা') return false;
-        var sm = t.match(/^(.+?)(শো|শ)$/);
-        if (sm && (Object.prototype.hasOwnProperty.call(WORD_NUM, sm[1]) || Object.prototype.hasOwnProperty.call(NUM_EXTRA_PREFIX, sm[1]))) {
-          var sb = Object.prototype.hasOwnProperty.call(WORD_NUM, sm[1]) ? WORD_NUM[sm[1]] : NUM_EXTRA_PREFIX[sm[1]];
-          if (sb >= 1 && sb <= (sm[2] === 'শো' ? 99 : 9)) return false;
-        }
-        var mm = t.match(/^(.+?)(হাজার|লাখ|লক্ষ|কোটি)$/);
-        if (mm && (/^\d+$/.test(mm[1]) || Object.prototype.hasOwnProperty.call(WORD_NUM, mm[1]) || Object.prototype.hasOwnProperty.call(SPECIAL_NUM, mm[1]) || Object.prototype.hasOwnProperty.call(NUM_EXTRA_PREFIX, mm[1]))) return false;
-        return true;
-      });
-      var desc = descTokens.join(' ').trim();
-      if (!desc) desc = category;
-      if (desc.length > 120) desc = desc.slice(0, 120);
+      // বিবরণ: কাঁচা বাক্য থেকে সংখ্যা কেটে নয় — পার্স করা
+      // বিষয়বস্তু থেকে বানানো ছোট পরিষ্কার সারাংশ
+      // (buildVoiceSummary দেখুন)। “আপনি বলেছেন” (raw) হুবহুই থাকে।
+      var desc = buildVoiceSummary(text, type, category);
       // তারিখের শব্দ: "গতকাল" বললে এন্ট্রিটা গতকালের হিসাবে বসে,
       // "পরশু" বললে তার আগের দিনের, "আগামীকাল"/"আগামী পরশু" বললে
       // সামনের দিনের — নইলে সব আজকের দিনে জমা হত
@@ -2268,9 +2494,8 @@
     }
     function renderParserModelUI() {
       if (!els.parserModelVersion) return;
-      var srcTxt = parserModel.source === 'downloaded' ? 'গিটহাব থেকে আপডেট করা'
-        : parserModel.source === 'file' ? 'মডেল ফাইল থেকে' : 'অ্যাপে বান্ডল করা';
-      els.parserModelVersion.textContent = 'v' + toBnDigits(String(parserModel.version)) + ' · ' + srcTxt;
+      // ভার্সন শুধু ল্যাটিন সংখ্যায় দেখায় (যেমন v5) — উৎসের লেখা থাকে না
+      els.parserModelVersion.textContent = 'v' + String(parserModel.version);
     }
     function setParserModelStatus(msg) { if (els.parserModelStatus) els.parserModelStatus.textContent = msg; }
     function saveDownloadedModel(m) {
@@ -2281,7 +2506,7 @@
     // আর সেটা আরও নতুন হলে সেটা চলে। কোনোটা না মিললে বান্ডলই থাকে।
     function initParserModel() {
       renderParserModelUI();
-      setParserModelStatus('নতুন মডেল এলে এখান থেকে আপডেট করা যাবে। আপডেট যাচাইয়ে নেট লাগবে; অফলাইনে বর্তমান মডেলই চলবে।');
+      setParserModelStatus('নতুন মডেল এলে এখান থেকে আপডেট করা যাবে।');
       try {
         var stored = JSON.parse(localStorage.getItem(MODEL_STORE_KEY) || 'null');
         if (stored && validateParserModel(stored) && stored.version > parserModel.version) {
@@ -2324,14 +2549,14 @@
     }
     function checkParserModelUpdate() {
       if (parserModelChecking) return;
-      if (!window.fetch) { setParserModelStatus('এই ব্রাউজারে আপডেট যাচাই চলবে না — বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।'); return; }
-      if (!navigator.onLine) { setParserModelStatus('নেট সংযোগ নেই — আপডেট যাচাই করা যাচ্ছে না। বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।'); return; }
+      if (!window.fetch) { setParserModelStatus('এই ব্রাউজারে আপডেট যাচাই চলবে না — বর্তমান মডেল v' + String(parserModel.version) + '-ই চলছে।'); return; }
+      if (!navigator.onLine) { setParserModelStatus('নেট সংযোগ নেই — আপডেট যাচাই করা যাচ্ছে না। বর্তমান মডেল v' + String(parserModel.version) + '-ই চলছে।'); return; }
       parserModelChecking = true;
       if (els.parserModelBtn) els.parserModelBtn.disabled = true;
       setParserModelStatus('যাচাই করা হচ্ছে…');
       fetchRemoteModel().then(function (m) {
         if (!validateParserModel(m)) {
-          setParserModelStatus('গিটহাবের মডেল ফাইলটা ঠিকঠাক পড়া যায়নি — বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।');
+          setParserModelStatus('গিটহাবের মডেল ফাইলটা ঠিকঠাক পড়া যায়নি — বর্তমান মডেল v' + String(parserModel.version) + '-ই চলছে।');
           finishParserModelCheck();
           return;
         }
@@ -2339,14 +2564,14 @@
           var oldV = parserModel.version;
           applyParserModel(m, 'downloaded');
           saveDownloadedModel(m);
-          setParserModelStatus('নতুন মডেল পাওয়া গেছে — v' + toBnDigits(String(oldV)) + ' থেকে v' + toBnDigits(String(m.version)) + '-এ আপডেট হয়ে চালু হয়েছে।');
-          showToast('পার্সার মডেল আপডেট হয়েছে — v' + toBnDigits(String(m.version)));
+          setParserModelStatus('নতুন মডেল পাওয়া গেছে — v' + String(oldV) + ' থেকে v' + String(m.version) + '-এ আপডেট হয়ে চালু হয়েছে।');
+          showToast('পার্সার মডেল আপডেট হয়েছে — v' + String(m.version));
         } else {
-          setParserModelStatus('আপনার মডেলই সর্বশেষ — v' + toBnDigits(String(parserModel.version)) + ' চলছে, নতুন কিছু পাওয়া যায়নি।');
+          setParserModelStatus('আপনার মডেলই সর্বশেষ — v' + String(parserModel.version) + ' চলছে, নতুন কিছু পাওয়া যায়নি।');
         }
         finishParserModelCheck();
       }).catch(function () {
-        setParserModelStatus('আপডেট যাচাই করা যায়নি — গিটহাবে মডেল ফাইলটা (model/parser-model.json) এখনো ওঠেনি, অথবা টোকেন/নেটে সমস্যা। বর্তমান মডেল v' + toBnDigits(String(parserModel.version)) + '-ই চলছে।');
+        setParserModelStatus('আপডেট যাচাই করা যায়নি — গিটহাবে মডেল ফাইলটা (model/parser-model.json) এখনো ওঠেনি, অথবা টোকেন/নেটে সমস্যা। বর্তমান মডেল v' + String(parserModel.version) + '-ই চলছে।');
         finishParserModelCheck();
       });
     }
@@ -2896,7 +3121,7 @@
     function cancelEdit() {
       state.editingId = null;
       if (els.entryFormPanel) els.entryFormPanel.classList.remove('editing-flash');
-      els.formTitle.textContent = 'হাতে এন্ট্রি যোগ করুন';
+      els.formTitle.textContent = 'ম্যানুয়াল এন্ট্রি';
       els.submitBtn.textContent = 'যোগ করুন';
       els.cancelEditBtn.style.display = 'none';
       els.entryForm.reset();
@@ -3538,11 +3763,12 @@
       document.querySelector('.voice-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
-    /* ---------- উদাহরণ বাক্য (ভয়েস পার্সিং পরীক্ষা) ---------- */
-    // ক্রম: রোজকার ঘন-ব্যবহারেরগুলো আগে; এরপর যেটা যতবার চাপা হবে,
-    // সেটা পরেরবার খোলার সময় তত সামনে উঠে আসবে (ব্যবহার-গণনা শুধু
-    // এই ডিভাইসেই থাকে)। তালিকায় সামনে দেখায় ৩টা — বাকিগুলো
-    // তালিকার ভেতরেই স্ক্রল করলে আসে।
+    /* ---------- সিড বাক্য (ভয়েস লার্নিংয়ের টেমপ্লেট) ---------- */
+    // এই বাক্যগুলো UI-তে দেখানো হয় না — এরা শুধু ভয়েস লার্নিংয়ের
+    // সিড-টেমপ্লেট: শেখা লাইনের পাশাপাশি এদের ধরন মিলিয়ে লাইন
+    // প্রেডিকশন / ভুল-শোনা শব্দ ঠিক করা হয় (নিচে applyLearningTo-তে
+    // EXAMPLES পাঠানো হয়)। তাই তালিকাটা হুবহু আগের মতোই থাকল —
+    // শুধু পর্দায় রেন্ডার হয় না।
     var EXAMPLES = [
       'দুপুরের খাবারে ২৫০ টাকা খরচ করেছি',
       'রিকশা ভাড়া পঞ্চাশ টাকা খরচ হয়েছে',
@@ -3556,26 +3782,6 @@
       'আমি আব্বুকে ৫০০ টাকা দিয়েছি',
       'আব্বু আমাকে টাকা দিচ্ছে ৫০০০ টাকা'
     ];
-    var EX_USE_KEY = 'khorochpotro_example_use';
-    var exUse = {};
-    try { exUse = JSON.parse(localStorage.getItem(EX_USE_KEY) || '{}') || {}; } catch (e) { exUse = {}; }
-    function renderExamples() {
-      els.exampleList.innerHTML = '';
-      var sorted = EXAMPLES.map(function (ex, i) { return { ex: ex, i: i, n: +exUse[ex] || 0 }; })
-        .sort(function (a, b) { return (b.n - a.n) || (a.i - b.i); });
-      sorted.forEach(function (item) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = '“' + item.ex + '”';
-        b.addEventListener('click', function () {
-          exUse[item.ex] = (+exUse[item.ex] || 0) + 1;
-          try { localStorage.setItem(EX_USE_KEY, JSON.stringify(exUse)); } catch (e) {}
-          handleVoiceResult(item.ex);
-        });
-        els.exampleList.appendChild(b);
-      });
-    }
-    renderExamples();
 
     /* === VOICE-LEARN-BEGIN === */
     /* ============================================================
@@ -4238,7 +4444,7 @@
     els.pdfBtn.addEventListener('click', generateMonthlyPdf);
     /* ---------- পিডিএফ বোতামের জায়গা: পর্দা অনুযায়ী ----------
        মোবাইলে (<960px) বোতামটা গিটহাব ব্যাকআপ অংশের ঠিক ওপরের
-       সারিতে থাকে; ডেস্কটপে (≥960px) হিসাবের ইতিহাস কার্ডের
+       সারিতে থাকে; ডেস্কটপে (≥960px) ট্রানজেকশন হিস্টোরি কার্ডের
        ভেতরে CSV বোতামগুলোর নিচের ফাঁকা জায়গায় বসে। বোতামটা
        একটাই — শুধু জায়গা বদলায়, তাই কাজ ও আইডি একই থাকে। */
     var pdfBtnMq = window.matchMedia('(min-width: 960px)');
@@ -4370,6 +4576,7 @@
       els.ghTokenStatus.textContent = ghToken ? 'সংরক্ষিত আছে' : 'বসানো হয়নি';
       els.ghTokenClearBtn.style.display = ghToken ? 'inline-flex' : 'none';
       els.ghTokenInput.placeholder = ghToken ? 'নতুন টোকেন বসান' : 'টোকেন বসান';
+      renderGhMinUI();
     }
     function ghSaveToken(t) {
       ghToken = t;
@@ -4445,6 +4652,7 @@
       els.ghPassStatus.textContent = ghPassphrase ? 'সংরক্ষিত আছে' : 'বসানো হয়নি';
       els.ghPassClearBtn.style.display = ghPassphrase ? 'inline-flex' : 'none';
       els.ghPassInput.placeholder = ghPassphrase ? 'নতুন পাসফ্রেজ বসান' : 'পাসফ্রেজ বসান';
+      renderGhMinUI();
     }
     function ghSavePassphrase(p) {
       ghPassphrase = p;
@@ -4469,6 +4677,41 @@
     els.ghPassClearBtn.addEventListener('click', function () {
       ghSavePassphrase('');
       ghSetStatus('পাসফ্রেজ মোছা হয়েছে — সিঙ্ক বন্ধ।');
+    });
+
+    /* ---------- ব্যাকআপ সেটিংস গোটানো/খোলা (minimize/maximize) ----------
+       টোকেন আর পাসফ্রেজ দুটোই সেভ থাকলেই গোটানোর বোতামটা দেখায়।
+       গোটানো শুধু ইনপুটের জায়গাগুলো লুকায় — টোকেন/পাসফ্রেজ আর
+       অটো-সিঙ্ক আগের মতোই চলতে থাকে; কিছু মোছা বা বন্ধ হয় না।
+       অবস্থাটা localStorage-এ থাকে, তাই রিলোডের পরেও গোটানোই
+       থাকে — ইউজার maximize না করা পর্যন্ত। */
+    var GH_MIN_KEY = 'khorochpotro_gh_settings_min';
+    var ghSettingsMin = false;
+    try { ghSettingsMin = localStorage.getItem(GH_MIN_KEY) === '1'; } catch (e) { ghSettingsMin = false; }
+    function renderGhMinUI() {
+      // দেখানোর শর্তটা সেভ করা মান দিয়েই যাচাই হয়: টোকেন আর
+      // পাসফ্রেজ — দুটোই সেভ থাকলেই বোতামটা আসে; যেকোনো একটা
+      // সেভ না থাকলেই বোতামটা লুকানো (hidden + display:none) থাকে।
+      var savedTok = '', savedPass = '';
+      try {
+        savedTok = localStorage.getItem(GH_TOKEN_KEY) || '';
+        savedPass = localStorage.getItem(GH_PASS_KEY) || '';
+      } catch (e) {}
+      var both = !!((ghToken || savedTok) && (ghPassphrase || savedPass));
+      var min = both && ghSettingsMin;
+      if (els.backupPanel) els.backupPanel.classList.toggle('minimized', min);
+      if (els.ghMinToggle) {
+        els.ghMinToggle.hidden = !both;
+        els.ghMinToggle.style.display = both ? 'inline-flex' : 'none';
+        els.ghMinToggle.textContent = min ? 'maximize করুন' : 'minimize করুন';
+        els.ghMinToggle.setAttribute('aria-expanded', min ? 'false' : 'true');
+      }
+      if (els.ghSettingsBody) els.ghSettingsBody.inert = min;
+    }
+    if (els.ghMinToggle) els.ghMinToggle.addEventListener('click', function () {
+      ghSettingsMin = !ghSettingsMin;
+      try { localStorage.setItem(GH_MIN_KEY, ghSettingsMin ? '1' : '0'); } catch (e) {}
+      renderGhMinUI();
     });
 
     // সময়সীমাসহ fetch — ওয়েবভিউ/দুর্বল নেটে গিটহাবের অনুরোধ ঝুলে
