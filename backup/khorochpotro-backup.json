@@ -2,10 +2,10 @@
   "app": "khorochpotro",
   "version": 2,
   "encrypted": true,
-  "updatedAt": "2026-11-09T16:55:29.393Z",
+  "updatedAt": "2026-11-09T18:44:45.823Z",
   "kdf": "PBKDF2-SHA256",
   "iterations": 150000,
-  "salt": "lfJ0TUaucIpJxVurKgvd6w==",
-  "iv": "WXF9gomA1hGusODY",
-  "data": "+kIRiM4iQxEZeCAkWAj4EW4rzXOXQZVVtAph25pnfYghwCajz4OCKSXsWQPI8WtqaSfSGgS7pmX5jt1I4KCtVdw05iXQOt4iVzB7nLZWfrJwtLmk4tbd3d4GM8NE27MwqhtFHdWtJvJR++UKZ4wcwiXsSxY52iRMz7fRRI/3SB4k1vOJvlg9I41HDlS6OfHc0btTEt+R/VGxTze0i9M/7IvgPVoAJTvGU00rBN923Tp0Y0eqocJpyYYUrUQm1hHK5QlYQIUGCAtIjTT2JeolbLOqabSLtCw/VBO+b15QIlXZ8u84K1/4n64EQ0oRpYO0gAXU7DubvusXFonaQUc="
+  "salt": "0g5VZ+NS5NpR0df48YxMbQ==",
+  "iv": "kt/BSERb3lJB2zkB",
+  "data": "TW8who30ncqIT1DVATKZzkRVeX2+Tll9ooqI7R/nEoskvnl28yuxkhaoN/teQ+0UWbzpymsWpccrgSSopr8fgHs4RPb3TWYj2ZjmDOzb0LfC30jhIkkwf2GursEjFqN3NCrI7+3A8VJ5XjK3xxyK3RoMWDr97vlyExZCNkwkew/qDf13cgl5yfjBIDcS8NjVysY9bTWvqXGCCWIyQYzn3sNucBHT5bxrNv8Geup58QG5H8SdXqjq9bWRWwBhZbLQ48dQdK4RlYrWO12qeN1NDlLyuAF1Sjtqqpgr0LcJX4UC3nXOLtp49G6rRfmDuHvobshLpAuGLZ/th9E6sBIYmUkFbmZRxE2gxs3C9+h72CloJ6AGNuX09LJRiC0OABa99/s4ua3vjxLdjQ9eT8YWmnwO7lOkIpUU"
 }
