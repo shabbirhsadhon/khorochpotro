@@ -113,6 +113,9 @@
         --line: #dbe4e0;
         --amber: #9a6206;
         --amber-bg: #fdf0d5;
+        --daily-btn-bg: #4ade9e;
+        --daily-btn-bg-hover: #68e9ae;
+        --daily-btn-text: #04301f;
         --shadow-sm: 0 1px 2px rgba(16, 42, 33, .06), 0 2px 8px rgba(16, 42, 33, .05);
         --shadow-md: 0 2px 6px rgba(16, 42, 33, .07), 0 10px 28px rgba(16, 42, 33, .09);
         --shadow-lg: 0 6px 16px rgba(7, 87, 62, .28), 0 18px 40px rgba(7, 87, 62, .22);
@@ -648,6 +651,68 @@
       .list-footer strong { color: var(--ink); }
       .data-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
+      /* ---------- ডেইলি খরচ: মাসের প্রতিদিনের মোট খরচ ----------
+         হিস্টোরি সেকশনটাই দুই ভিউতে বদলায় — এন্ট্রি তালিকা আর ডেইলি
+         টোটাল; বদলটা ফেড + হালকা স্লাইডে (~৩০০ms), লাফ নয়। হেডিং একই
+         এলিমেন্ট থাকে, শুধু লেখা বদলায় — তাই দুই ভিউতে হুবহু একই
+         ফন্ট/সাইজ/রঙ। */
+      .hist-view { transition: opacity .3s ease, transform .3s ease; will-change: opacity, transform; }
+      .hist-view[hidden] { display: none; }
+      .hist-view-leave { opacity: 0; transform: translateY(8px); transition-duration: .17s; }
+      .hist-view-enter { opacity: 0; transform: translateY(12px); }
+      .history-panel h2 { transition: opacity .17s ease, transform .17s ease; }
+      .history-panel h2.swap { opacity: 0; transform: translateY(4px); }
+      /* পিরিয়ড ড্রপডাউনের পাশে হালকা সবুজ বোতাম — ডানদিকের ফাঁকা
+         জায়গাটা জুড়ে থাকে, লেখা ঠিক মাঝখানে, আরামদায়ক প্যাডিং */
+      .daily-btn {
+        flex: 1 1 auto; min-width: 0; height: 44px; border: none; border-radius: 999px;
+        background: var(--daily-btn-bg); color: var(--daily-btn-text);
+        font-size: 15px; font-weight: 700; line-height: 1.3;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 0 16px; white-space: nowrap; cursor: pointer;
+        box-shadow: 0 4px 14px rgba(11, 110, 79, .22);
+        -webkit-tap-highlight-color: transparent;
+        transition: background .25s ease, transform .18s ease, box-shadow .25s ease;
+      }
+      .daily-btn svg { width: 17px; height: 17px; flex: none; }
+      .daily-btn:hover { background: var(--daily-btn-bg-hover); transform: translateY(-1px); box-shadow: 0 7px 18px rgba(11, 110, 79, .28); }
+      .daily-btn:active { transform: scale(.965); box-shadow: 0 2px 8px rgba(11, 110, 79, .22); }
+      .daily-top { display: flex; gap: 8px; margin-bottom: 14px; }
+      .daily-back-btn {
+        flex: 1 1 0; min-width: 0; height: 44px; border-radius: 999px;
+        border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+        font-size: 15px; font-weight: 700; line-height: 1.3;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 0 16px; white-space: nowrap; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color .25s ease, color .25s ease, transform .15s ease, background .25s ease;
+      }
+      .daily-back-btn svg { width: 17px; height: 17px; flex: none; }
+      .daily-back-btn:hover { border-color: var(--primary); color: var(--primary); }
+      .daily-back-btn:active { transform: scale(.965); }
+      .daily-month-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 2px 2px 4px; }
+      .daily-month-title { font-weight: 700; font-size: 19px; }
+      .daily-month-total { font-size: 13.5px; color: var(--ink-3); font-weight: 500; white-space: nowrap; }
+      .daily-month-total strong { color: var(--primary); font-weight: 800; }
+      .daily-sub { color: var(--ink-3); font-size: 13.5px; margin: 0 2px 10px; }
+      .daily-row { display: grid; grid-template-columns: 104px 1fr auto; align-items: center; gap: 10px; padding: 6px 4px; border-radius: 12px; }
+      .daily-row + .daily-row { border-top: 1px solid var(--line); }
+      .daily-row.today { background: var(--surface-2); border: 1px solid var(--line); margin: 2px 0; }
+      .daily-row.today + .daily-row { border-top: none; }
+      .daily-day-label { font-size: 14.5px; font-weight: 600; line-height: 1.35; }
+      .daily-today-tag { font-style: normal; display: inline-block; font-size: 11.5px; font-weight: 700; color: var(--daily-btn-text); background: var(--daily-btn-bg); border-radius: 999px; padding: 1px 7px; margin-left: 4px; vertical-align: 2px; white-space: nowrap; }
+      .daily-bar-track { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+      .daily-row.today .daily-bar-track { background: var(--surface-3); }
+      .daily-bar-fill { height: 100%; width: 0; border-radius: 999px; background: var(--primary); transition: width .9s cubic-bezier(.22, .8, .3, 1); }
+      .daily-day-amt { font-size: 15px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .daily-day-amt.zero { color: var(--ink-3); font-weight: 500; }
+      @media (max-width: 480px) {
+        .period-dd .dd-wrap { min-width: 0; flex: 1 1 0; }
+        .daily-btn { flex: 1 1 0; padding: 0 12px; font-size: 14.5px; }
+        .daily-back-btn { padding: 0 12px; font-size: 14.5px; }
+        .daily-row { grid-template-columns: 92px 1fr auto; gap: 8px; }
+      }
+
       /* ---------- FAB + toast ---------- */
       .fab {
         position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 40;
@@ -837,7 +902,7 @@
       /* পিরিয়ড ড্রপডাউন: আগের "সব সময়" পিলের জায়গাতেই বামদিকে বসে —
          পুরো চওড়া হয় না, প্রস্থ লেবেল অনুযায়ী (সবচেয়ে লম্বা অপশন
          "নির্বাচিত মাস" এক লাইনে ধরার মতো ন্যূনতম প্রস্থ রাখা)। */
-      .period-dd { display: flex; justify-content: flex-start; }
+      .period-dd { display: flex; justify-content: flex-start; align-items: center; gap: 8px; }
       .period-dd .dd-wrap { width: auto; flex: 0 1 auto; min-width: 196px; max-width: 100%; }
       @media (max-width: 640px) { .month-tools .dd-wrap { flex: 1 1 auto; } }
       .dd-btn {
@@ -1235,10 +1300,11 @@
         <div class="stack">
           <!-- History -->
           <section class="card panel history-panel" aria-label="ট্রানজেকশন হিস্টোরি">
-            <h2>
+            <h2 id="historyTitle">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-              ট্রানজেকশন হিস্টোরি
+              <span id="historyTitleText">ট্রানজেকশন হিস্টোরি</span>
             </h2>
+            <div class="hist-view" id="histViewList">
             <div class="history-tools">
               <div class="search-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
@@ -1251,6 +1317,10 @@
                   <option value="week">এই সপ্তাহ</option>
                   <option value="month">নির্বাচিত মাস</option>
                 </select>
+                <button class="daily-btn" id="dailyBtn" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20H2"/></svg>
+                  ডেইলি খরচ
+                </button>
               </div>
               <div class="filter-row">
                 <select id="typeFilter" aria-label="ধরন অনুযায়ী ছাঁকনি">
@@ -1276,6 +1346,23 @@
                 সিএসভি থেকে আনুন
               </button>
               <input type="file" id="importFile" accept=".csv,text/csv" style="display:none" />
+            </div>
+            </div>
+            <!-- ডেইলি খরচ ভিউ: নির্বাচিত মাসের প্রতিদিনের মোট খরচ —
+                 সারিগুলো renderDaily() আসল এন্ট্রি থেকে বানায় -->
+            <div class="hist-view" id="histViewDaily" hidden>
+              <div class="daily-top">
+                <button class="daily-back-btn" id="dailyBackBtn" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg>
+                  ট্রানজেকশন হিস্টোরি
+                </button>
+              </div>
+              <div class="daily-month-head">
+                <span class="daily-month-title" id="dailyMonthTitle"></span>
+                <span class="daily-month-total">মোট খরচ <strong id="dailyMonthTotal">৳ ০</strong></span>
+              </div>
+              <p class="daily-sub">প্রতিদিনের মোট খরচ — সবচেয়ে বেশি খরচের দিনের তুলনায় বার বড় হয়</p>
+              <div id="dailyRows" role="list" aria-label="প্রতিদিনের মোট খরচ"></div>
             </div>
           </section>
         </div>
@@ -1564,7 +1651,9 @@
      'ghTokenInput', 'ghTokenSaveBtn', 'ghTokenClearBtn', 'ghTokenStatus',
      'ghPassInput', 'ghPassSaveBtn', 'ghPassClearBtn', 'ghPassStatus', 'ghSyncStatus', 'ghStatus',
      'ghNameInput', 'ghNameSaveBtn', 'ghNameClearBtn', 'ghNameStatus',
-     'ghMinToggle', 'backupPanel', 'ghSettingsBody'
+     'ghMinToggle', 'backupPanel', 'ghSettingsBody',
+     'historyTitle', 'historyTitleText', 'dailyBtn', 'dailyBackBtn', 'histViewList', 'histViewDaily',
+     'dailyRows', 'dailyMonthTitle', 'dailyMonthTotal'
     ].forEach(function (id) { els[id] = $(id); });
 
     /* ---------- টোস্ট ---------- */
@@ -3154,6 +3243,8 @@
        ছোট স্ক্রিনে সারি লম্বা হলেও ঠিক ৩টাই সামনে থাকে। ৩টা বা তার কম
        এন্ট্রি থাকলে কোনো সীমা নেই। */
     function fitEntryList() {
+      // ডেইলি ভিউতে তালিকা লুকানো থাকে — তখন মাপ নিলে উচ্চতা নষ্ট হয়
+      if (els.histViewList && els.histViewList.hidden) return;
       var entries = els.entryList.querySelectorAll('.entry');
       if (entries.length > 3) {
         var third = entries[2];
@@ -3167,7 +3258,96 @@
     /* ফন্ট লোড শেষে সারির উচ্চতা বদলাতে পারে — তখন আবার মেপে নেওয়া */
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitEntryList);
 
-    function renderAll() { buildMonthOptions(); renderSummary(); renderBudget(); renderList(); updateMonthStepper(); }
+    function renderAll() { buildMonthOptions(); renderSummary(); renderBudget(); renderList(); renderDaily(); updateMonthStepper(); }
+
+    /* ---------- ডেইলি খরচ: নির্বাচিত মাসের প্রতিদিনের মোট খরচ ----------
+       শুধু খরচ (জমা নয়), আসল এন্ট্রি (state.entries) থেকে হিসাব —
+       কোনো নমুনা ডেটা নয়। বারের প্রস্থ = স্থির স্কেল ০–৫০০ টাকা:
+       min(দিনের খরচ ÷ ৫০,০০০ পয়সা, ১) × ১০০% — ৳২৫০ অর্ধেক,
+       ৳৫০০ ফুল, তার বেশি হলেও ফুল (ক্যাপ), ৳০-এর দিন খালি। */
+    var showingDaily = false, histAnimating = false;
+    function dailyBarFills() { return els.dailyRows.querySelectorAll('.daily-bar-fill'); }
+    function paintDailyBars() {
+      var fills = dailyBarFills();
+      for (var i = 0; i < fills.length; i++) {
+        fills[i].style.transitionDelay = Math.min(i * 22, 500) + 'ms';
+        fills[i].style.width = fills[i].getAttribute('data-w') + '%';
+      }
+    }
+    function animateDailyBars() {
+      var fills = dailyBarFills();
+      for (var i = 0; i < fills.length; i++) { fills[i].style.transitionDelay = '0ms'; fills[i].style.width = '0%'; }
+      void els.dailyRows.offsetWidth;
+      requestAnimationFrame(function () { requestAnimationFrame(paintDailyBars); });
+    }
+    function resetDailyBars() {
+      var fills = dailyBarFills();
+      for (var i = 0; i < fills.length; i++) { fills[i].style.transitionDelay = '0ms'; fills[i].style.width = '0%'; }
+    }
+    function renderDaily() {
+      if (!els.dailyRows) return;
+      var ym = state.selectedMonth || currentMonth();
+      var p = String(ym).split('-');
+      var dim = daysInMonth(ym);
+      var totals = [];
+      var d;
+      for (d = 0; d <= dim; d++) totals.push(0);
+      var monthTotal = 0;
+      state.entries.forEach(function (e) {
+        if (e.type !== 'expense' || monthOf(e.date) !== ym) return;
+        var day = parseInt(String(e.date).slice(8, 10), 10);
+        if (day >= 1 && day <= dim) {
+          totals[day] += e.poisha;
+          monthTotal += e.poisha;
+        }
+      });
+      els.dailyMonthTitle.textContent = monthLabel(ym);
+      els.dailyMonthTotal.textContent = fmtMoney(monthTotal);
+      var t = todayStr();
+      var html = '';
+      for (var day = 1; day <= dim; day++) {
+        var ds = ym + '-' + pad2(day);
+        var amt = totals[day];
+        var w = amt > 0 ? Math.min(amt / 50000, 1) * 100 : 0;
+        html += '<div class="daily-row' + (ds === t ? ' today' : '') + '" role="listitem">' +
+          '<span class="daily-day-label">' + bnInt(day) + ' ' + MONTH_NAMES_BN[(+p[1]) - 1] + (ds === t ? '<em class="daily-today-tag">আজ</em>' : '') + '</span>' +
+          '<div class="daily-bar-track"><div class="daily-bar-fill" data-w="' + w + '"></div></div>' +
+          '<span class="daily-day-amt' + (amt === 0 ? ' zero' : '') + '">' + fmtMoney(amt) + '</span></div>';
+      }
+      els.dailyRows.innerHTML = html;
+      // ডেইলি ভিউ খোলা থাকলে (এন্ট্রি বদল/মাস বদল) বারগুলো আবার এঁকে দাও
+      if (showingDaily) animateDailyBars();
+    }
+    /* হিস্টোরি সেকশনের দুই ভিউয়ের বদল — ফেড + হালকা স্লাইড (~৩০০ms)।
+       হেডিং একই এলিমেন্ট: লেখা বদলায়, স্টাইল হুবহু একই থাকে।
+       ডেইলি ভিউতে "ডেইলি খরচ" বোতাম থাকে না (তালিকার ভিউয়ের ভেতরে
+       লুকিয়ে যায়) — ফেরার একমাত্র পথ "← ট্রানজেকশন হিস্টোরি"। */
+    function showHistView(toDaily) {
+      if (histAnimating || toDaily === showingDaily) return;
+      histAnimating = true;
+      showingDaily = toDaily;
+      var outEl = toDaily ? els.histViewList : els.histViewDaily;
+      var inEl = toDaily ? els.histViewDaily : els.histViewList;
+      outEl.classList.add('hist-view-leave');
+      els.historyTitle.classList.add('swap');
+      setTimeout(function () {
+        outEl.classList.remove('hist-view-leave');
+        outEl.hidden = true;
+        if (!toDaily) resetDailyBars();
+        els.historyTitleText.textContent = toDaily ? 'ডেইলি খরচ' : 'ট্রানজেকশন হিস্টোরি';
+        els.historyTitle.classList.remove('swap');
+        if (els.pdfBtn) els.pdfBtn.style.display = toDaily ? 'none' : '';
+        inEl.hidden = false;
+        inEl.classList.add('hist-view-enter');
+        if (toDaily) { renderDaily(); animateDailyBars(); } else { fitEntryList(); }
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { inEl.classList.remove('hist-view-enter'); });
+        });
+        setTimeout(function () { histAnimating = false; }, 320);
+      }, 175);
+    }
+    els.dailyBtn.addEventListener('click', function () { showHistView(true); });
+    els.dailyBackBtn.addEventListener('click', function () { showHistView(false); });
 
     /* ---------- ফর্ম ---------- */
     function setFormType(type, keepCategory) {
