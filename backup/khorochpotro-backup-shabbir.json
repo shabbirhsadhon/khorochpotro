@@ -1,0 +1,11 @@
+{
+  "app": "khorochpotro",
+  "version": 2,
+  "encrypted": true,
+  "updatedAt": "2026-11-10T05:50:46.951Z",
+  "kdf": "PBKDF2-SHA256",
+  "iterations": 150000,
+  "salt": "/GG/9H0xsNYKi6ZqcyQxUA==",
+  "iv": "vjEzM9PXOM/AVhPE",
+  "data": "7egY8zv/XoLJiUf/gEbZaK3q201dpWH/xxQabCfe7UjpbtkncadT7b5YDreJc7uXETMRe5eYdkshjhEiVI9XubQJX0cR3agj6ODSuSuAXHiw7qHQsyNp8Zh2XqO8YEzND0f6JaB5fylN7KmVD4Eib8PB9KTTwngZFO1hWQJ34Qaz3UyhoAMt4EYRMfToQGprV+E0WDYUxW+RhDs/6pJ/FqevWazrzpYEhL+quGbClnlVreLyPc2QDvPu3625oZWKGbwH/MPSn3iVewYpXS1aMqZvhIlWQLq2biYudnDG5Tv6WkwQRSeLH5xZJwmMMAhB2JqCNdELckWog3KoJ12RKRP7O6aKnm+O/s5LRwHWaNLhMzTtz1fGyZQsdrAVZinButKlbLC6oGQW+Qs76dHsAxMEJt2j9Snq"
+}
