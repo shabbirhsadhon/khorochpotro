@@ -2,10 +2,10 @@
   "app": "khorochpotro",
   "version": 2,
   "encrypted": true,
-  "updatedAt": "2026-11-10T09:14:25.808Z",
+  "updatedAt": "2026-11-10T09:15:00.651Z",
   "kdf": "PBKDF2-SHA256",
   "iterations": 150000,
-  "salt": "AwCUkGrhDDe1PadCmYtWlA==",
-  "iv": "FS7dzxb4UDTztrjo",
-  "data": "473VVh7OqrPriCLR4W7ogt3gLXSJSTpy1g+IRYwQwd0QBluaFUXTGtDgpCQS0OvpWLRRc35QGUwVYVZsRxcD+3x0SctDNhUyFKIcRBZEJHOJgbxx5JKTdmVehwTwU/64eEic7E3dMnC0fq+kZdI3ODWwFmbmzp1d7Eucn/0Lz7+blDxOpy3NBd9Rsow3j68hXlMDiXTm+EKSEl16afJqwpCYfQykMxKdzfpY5+JgeZilYuMhsYhNJ07bR37sOFMy4Ibdn4O9cc/veBHTrYh05Bx9Mtgj+wflgwkR57O5vxr+9pf72qL7hLTLLdpAaQwxIfII7ptOlg6iMoaLhdSnktW7NU0UFAaQv0zI7i19DgMtv5YuabE3bzx8DsdqbpDfQg/mgmPbTrzLFQVZ3yyHwstl4NNJZqUs7si96dBFuVqAdTF6vxVPHNHTGBkr1z9pePq4ew8="
+  "salt": "PmmNUz5tsq9NYc8N1b5mUQ==",
+  "iv": "T5tZ5xcFPu77BRXw",
+  "data": "3W/NC7S3ei3SxwE71dvsYn6ZX4ZtKDFu0Kgpy7vu0if1YxjfS1gje93DRzBHRV75OuGx47sqooIL/ogydNdd+QhoIVUwZMCLrVU4XqCNDsoUOy55NuelxeuJ8YXlZnIHR/Oqt+8S9vKjhA3ynlxGMjFFg4NCX+QJtVDVAeTI1rrPsaStbsNDQMPa0z7IcXXOgc7Zmr5Lz1gtVdp+YGFP6LKZT1ct6SClAS5TqEm+hrpimK+b4HG+rPAn568kqKA62X6UtlbvNf+C5EBHg9/dJ5qf4gW5EK28gvTPpTF+do/7OnS1TLN4G9CbjGRIM/JyAOHSOXsB/7fk6WetFVdU6bFMpcNAFnLc+Po9G8yF9HTe82jYboTqYEmt6Jmh8ONvHagtuIpxHP5v3x0SjeGo1X0mxfeuFyhf1zq2aWbMjXvYDIRzMo+eYbbzNtlF/qy9ALcxa16BXb9705HlTpUoDjOzEU9jIOkPYrxYleVKanDAvmDx45eVMQZGu7dTOFJ3XfdPpMoOdCswq7sJECZaFbMCzQF0Gsw9j/39hSWxK0uLu29NVrMFSbyHqJ+pRH+BbdDjqkZxZCpVu4u6Uh+k2xT1K4xejTmoTpGoWA5jpDqP6Nl08M/qcFBw9dBChA=="
 }
