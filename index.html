@@ -306,7 +306,15 @@
         background: var(--surface); color: var(--ink); width: 100%; max-width: 520px; max-height: 86vh;
         overflow-y: auto; overscroll-behavior: contain; border-radius: 22px 22px 0 0; padding: 20px; box-shadow: var(--shadow-lg);
         transform: translateY(103%); transition: transform .36s cubic-bezier(.32, .72, .24, 1);
+        scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
       }
+      /* পাতলা স্বচ্ছ-ট্র্যাক স্ক্রলবার: ডেস্কটপের ডিফল্ট চওড়া ধূসর
+         স্ক্রলবার-ট্র্যাক ডানদিকের গোল কর্নার দুটো ঢেকে চৌকো করে
+         দিত — ট্র্যাক স্বচ্ছ হলে প্যানেলের গোল ব্যাকগ্রাউন্ডই
+         কর্নারে দেখা যায়, চার কর্নারই গোল থাকে */
+      .modal-card::-webkit-scrollbar { width: 6px; }
+      .modal-card::-webkit-scrollbar-track { background: transparent; }
+      .modal-card::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
       .modal-overlay.open .modal-card { transform: translateY(0); }
       @media (min-width: 640px) {
         .modal-overlay { align-items: center; padding: 20px; }
@@ -936,6 +944,11 @@
         padding: 6px; max-height: 264px; overflow-y: auto; overscroll-behavior: contain;
         scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
       }
+      /* ডেস্কটপে ডিফল্ট স্ক্রলবার-ট্র্যাক ডানদিকের গোল কর্নার ঢেকে
+         দিত — স্বচ্ছ ট্র্যাক + পাতলা গোল থাম্বে চার কর্নারই গোল থাকে */
+      .dd-panel::-webkit-scrollbar { width: 6px; }
+      .dd-panel::-webkit-scrollbar-track { background: transparent; }
+      .dd-panel::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
       .dd-panel[hidden] { display: none; }
       .dd-item {
         display: block; width: 100%; text-align: left; border: 0; background: transparent; color: var(--ink);
