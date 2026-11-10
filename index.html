@@ -834,6 +834,11 @@
       .dd-native { display: none !important; }
       .dd-wrap { position: relative; min-width: 0; }
       .filter-row .dd-wrap { flex: 1 1 130px; }
+      /* পিরিয়ড ড্রপডাউন: আগের "সব সময়" পিলের জায়গাতেই বামদিকে বসে —
+         পুরো চওড়া হয় না, প্রস্থ লেবেল অনুযায়ী (সবচেয়ে লম্বা অপশন
+         "নির্বাচিত মাস" এক লাইনে ধরার মতো ন্যূনতম প্রস্থ রাখা)। */
+      .period-dd { display: flex; justify-content: flex-start; }
+      .period-dd .dd-wrap { width: auto; flex: 0 1 auto; min-width: 196px; max-width: 100%; }
       @media (max-width: 640px) { .month-tools .dd-wrap { flex: 1 1 auto; } }
       .dd-btn {
         display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
@@ -1239,11 +1244,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
                 <input id="searchInput" type="search" placeholder="বিবরণ বা ক্যাটাগরি খুঁজুন…" autocomplete="off" />
               </div>
-              <div class="chips" role="group" aria-label="সময় অনুযায়ী ছাঁকনি">
-                <button class="chip" type="button" data-period="all" aria-pressed="true">সব সময়</button>
-                <button class="chip" type="button" data-period="today" aria-pressed="false">আজ</button>
-                <button class="chip" type="button" data-period="week" aria-pressed="false">এই সপ্তাহ</button>
-                <button class="chip" type="button" data-period="month" aria-pressed="false">নির্বাচিত মাস</button>
+              <div class="period-dd">
+                <select id="periodFilter" aria-label="সময় অনুযায়ী ছাঁকনি">
+                  <option value="all">সব সময়</option>
+                  <option value="today">আজ</option>
+                  <option value="week">এই সপ্তাহ</option>
+                  <option value="month">নির্বাচিত মাস</option>
+                </select>
               </div>
               <div class="filter-row">
                 <select id="typeFilter" aria-label="ধরন অনুযায়ী ছাঁকনি">
@@ -1549,7 +1556,7 @@
      'amountField', 'categorySelect', 'dateInput', 'descInput', 'submitBtn', 'cancelEditBtn', 'formTitle',
      'budgetInput', 'budgetSaveBtn', 'budgetView', 'budgetEmpty', 'budgetBar', 'budgetSpent', 'budgetTotal',
      'budgetRemain', 'budgetMonthLbl', 'budgetMinToggle', 'budgetPanel', 'budgetSettingsBody',
-     'searchInput', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
+     'searchInput', 'periodFilter', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
      'shownExpense', 'csvBtn', 'importBtn', 'importFile', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
      'voiceLiveText', 'voiceDetected', 'toast', 'voiceNotice', 'micEnableBtn',
      'fabSyncIcon', 'fabSyncText', 'micSyncIcon', 'restoreOverlay',
@@ -3293,14 +3300,7 @@
     els.searchInput.addEventListener('input', function () { state.filter.q = els.searchInput.value.trim(); renderList(); });
     els.typeFilter.addEventListener('change', function () { state.filter.type = els.typeFilter.value; renderList(); });
     els.catFilter.addEventListener('change', function () { state.filter.cat = els.catFilter.value; renderList(); });
-    document.querySelectorAll('.chip[data-period]').forEach(function (chip) {
-      chip.addEventListener('click', function () {
-        document.querySelectorAll('.chip[data-period]').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
-        chip.setAttribute('aria-pressed', 'true');
-        state.filter.period = chip.getAttribute('data-period');
-        renderList();
-      });
-    });
+    els.periodFilter.addEventListener('change', function () { state.filter.period = els.periodFilter.value; renderList(); });
 
     /* ---------- মাস বাছাই ---------- */
     els.monthInput.addEventListener('change', function () {
@@ -5610,6 +5610,7 @@
       enhanceSelect(els.categorySelect);
       enhanceSelect(els.catFilter);
       enhanceSelect(els.typeFilter);
+      enhanceSelect(els.periodFilter);
       bootRestore();
     }
     init();
