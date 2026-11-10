@@ -2111,6 +2111,15 @@
       }
       return false;
     }
+    // “মা” — শুধু আলাদা শব্দ হিসেবে মিললেই ফ্যামিলি। সাবস্ট্রিং
+    // ধরে খুঁজলে “জমা”-র ভেতরেও (“জ-মা”) মিলে যেত, তাই টোকেন
+    // ধরে যাচাই: টোকেনটা হুবহু “মা” হলেই মিল ধরা হয়। “ব্যাংকে
+    // টাকা জমা দিছি” জমা, মায়ের থেকে পাওয়া নয়।
+    function hasStandaloneMa(text) {
+      var toks = String(text || '').split(/[\s।,.!?;:"'“”‘’()\[\]\-]+/).filter(Boolean);
+      for (var i = 0; i < toks.length; i++) { if (toks[i] === 'মা') return true; }
+      return false;
+    }
     // ছোট কীওয়ার্ডের শব্দ-সীমানা গার্ড — সাবস্ট্রিং ধরে খুঁজলে
     // ছোট শব্দটা বড় অসম্পর্কিত শব্দের ভেতরেও মিলে যায় (“চাল” ⊂
     // “চালু”, “ডাল” ⊂ “ডালিম”, “আদা” ⊂ “আদায়”, “কই” ⊂ “কইরা”,
@@ -2135,7 +2144,8 @@
       'চাল': function (text) { return hasGuardedWord(text, 'চাল', ['', 'ের', 'টা', 'টি', 'গুলো', 'গুলা']); },
       'ডাল': function (text) { return hasGuardedWord(text, 'ডাল', ['', 'ের', 'টা', 'টি']); },
       'আদা': function (text) { return hasGuardedWord(text, 'আদা', ['', 'র', 'টা', 'টি']); },
-      'কই': function (text) { return hasGuardedWord(text, 'কই', ['']); }
+      'কই': function (text) { return hasGuardedWord(text, 'কই', ['']); },
+      'মা ': function (text) { return hasStandaloneMa(text); }
     };
     // বাজারের প্রসঙ্গ — খালি “বাজার”টা শব্দ-সীমানা দিয়ে দেখা হয়,
     // যাতে “কক্সবাজার” বাজারের প্রসঙ্গ হয়ে খাবারের অগ্রাধিকার
@@ -2195,10 +2205,13 @@
        বিবরণের সারাংশ — buildVoiceSummary(text, type, category)
        বিবরণ কখনোই কাঁচা বাক্য থেকে সংখ্যা কেটে বানানো হয় না
        (আগের বাগ: “পরোটা খাইলাম ৫০ টাকার” -> “পরোটা খাইলাম
-       টাকার”)। বদলে পার্স করা বিষয়বস্তু থেকে — পার্সারের নিজের
-       কীওয়ার্ড-জ্ঞান দিয়ে — সবচেয়ে নির্দিষ্ট মিলে যাওয়া
-       জিনিসটা দিয়ে ছোট পরিষ্কার বিশেষ্য-বাক্যাংশ (১-৪ শব্দ)
-       বানানো হয়। এটাই এন্ট্রির শিরোনাম/লেবেল: ভয়েস প্রিভিউয়ে
+       টাকার”)। বদলে বাক্যের ধরন ধরে নির্দিষ্ট প্যাটার্নে বানানো
+       হয়: জমায় “আব্বুর থেকে পাওয়া”, যাতায়াতে “অটো ভাড়ার
+       খরচ”, কেনায় “মেরিল কেনার খরচ” / “বেকারি থেকে পাউরুটির
+       খরচ”, খাওয়ায় “রাতের খাবারের খরচ” / “ক্যান্টিনের
+       স্যান্ডউইচের খরচ”, সাধারণ খরচে “বাজারের খরচ”। প্যাটার্নগুলো
+       সাধারণ নিয়ম — নতুন নমুনা এলে সংশ্লিষ্ট তালিকা/নিয়মে যোগ
+       করলেই চলবে। এটাই এন্ট্রির শিরোনাম/লেবেল: ভয়েস প্রিভিউয়ে
        আর হিস্টোরি তালিকায় এটাই দেখায়।
        ============================================================ */
     // কীওয়ার্ড হুবহু বসালে ভাঙা/অস্বাভাবিক শোনায় — সেগুলোর
@@ -2322,12 +2335,214 @@
       for (var i = 0; i < verbs.length; i++) set[verbs[i]] = 1;
       return set;
     })();
+    /* ---------- বিবরণের প্যাটার্ন-সহায়ক ---------- */
+    // বাংলা ষষ্ঠী (সম্বন্ধ পদ) — সবসময় মূল (base) রূপ থেকে বানানো
+    // হয়, বিভক্তি-লাগা রূপে কখনোই নয়। বহু-শব্দের বাক্যাংশে
+    // বিভক্তি বসে শুধু শেষ শব্দে (“মুদি দোকান” -> “মুদি দোকানের”,
+    // “দুপুরের খাবার” -> “দুপুরের খাবারের”)।
+    function toPossessive(w) {
+      var parts = String(w || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '';
+      var last = parts[parts.length - 1];
+      var poss;
+      if (last === 'মা') poss = 'মায়ের';
+      else if (last === 'ভাই') poss = 'ভাইয়ের';
+      else if (last === 'বউ') poss = 'বউয়ের';
+      else {
+        var lastCh = last.charAt(last.length - 1);
+        // শেষে আলাদা “ই/ঈ” অক্ষর থাকলে “য়ের” (বই -> বইয়ের,
+        // দই -> দইয়ের, সদাই -> সদাইয়ের); স্বরচিহ্নে (া ি ী ু ূ
+        // ৃ ে ৈ ো ৌ) শেষ হলে “র” (আব্বু -> আব্বুর, পাউরুটি ->
+        // পাউরুটির, ভাড়া -> ভাড়ার); নইলে “ের” (বাজার ->
+        // বাজারের, ডাল -> ডালের, ছাত্র -> ছাত্রের)।
+        if (lastCh === 'ই' || lastCh === 'ঈ') poss = last + 'য়ের';
+        else if ('া ি ী ু ূ ৃ ে ৈ ো ৌ'.replace(/\s/g, '').indexOf(lastCh) !== -1) poss = last + 'র';
+        else poss = last + 'ের';
+      }
+      parts[parts.length - 1] = poss;
+      return parts.join(' ');
+    }
+    // খাওয়ার আসল ক্রিয়া-রূপ — EAT_WORDS-এ জায়গা/খাবারের নামও
+    // আছে; সেগুলো দিয়ে খাওয়ার ধাপ চালু হলে “ক্যান্টিনে পাউরুটি
+    // কিনলাম”ও খাওয়া হয়ে যেত, তাই ধাপটা শুধু ক্রিয়া দিয়েই চলে।
+    var SUMMARY_EAT_VERBS = ['খাইলাম', 'খাইলো', 'খাইলেন', 'খাইছি', 'খাইছে', 'খাইছিল', 'খেয়েছি', 'খেয়েছে', 'খেয়েছিল', 'খেলাম', 'খেলো', 'খাচ্ছি', 'খাচ্ছে', 'খেয়ে', 'খাওয়ালাম', 'খাওয়ানো', 'খাওয়া'];
+    // যাতায়াতের মাধ্যম — দীর্ঘতমটা আগে মেলে (“অটোরিকশা” আগে,
+    // “অটো” পরে; “ইজিবাইক” আগে, “বাইক” পরে)। “রিক্সা” শুনলেও
+    // লেবেলে “রিকশা”-ই বসে।
+    var SUMMARY_TRANSPORT_MODES = [
+      ['অটোরিকশা', 'অটোরিকশা'], ['মোটরসাইকেল', 'মোটরসাইকেল'], ['মেট্রোরেল', 'মেট্রোরেল'],
+      ['স্পিডবোট', 'স্পিডবোট'], ['সিএনজি', 'সিএনজি'], ['ইজিবাইক', 'ইজিবাইক'],
+      ['ট্যাক্সি', 'ট্যাক্সি'], ['স্টিমার', 'স্টিমার'], ['স্কুটার', 'স্কুটার'],
+      ['রিকশা', 'রিকশা'], ['রিক্সা', 'রিকশা'], ['মাইক্রো', 'মাইক্রো'], ['স্কুটি', 'স্কুটি'],
+      ['মিশুক', 'মিশুক'], ['লেগুনা', 'লেগুনা'], ['টেম্পু', 'টেম্পু'], ['পাঠাও', 'পাঠাও'],
+      ['মেট্রো', 'মেট্রো'], ['নৌকা', 'নৌকা'], ['অটো', 'অটো'], ['বাস', 'বাস'], ['ট্রেন', 'ট্রেন'],
+      ['লঞ্চ', 'লঞ্চ'], ['উবার', 'উবার'], ['ভ্যান', 'ভ্যান'], ['ক্যাব', 'ক্যাব'], ['বাইক', 'বাইক'],
+      ['ফেরি', 'ফেরি'], ['বিমান', 'বিমান'], ['প্লেন', 'প্লেন'], ['ট্রাক', 'ট্রাক'],
+      ['পিকআপ', 'পিকআপ'], ['ওভাই', 'ওভাই']
+    ];
+    function summaryTransportMode(t) {
+      for (var i = 0; i < SUMMARY_TRANSPORT_MODES.length; i++) {
+        var w = SUMMARY_TRANSPORT_MODES[i][0];
+        var p = t.indexOf(w);
+        while (p !== -1) {
+          // “বাস” যেন “বাসা” (বাড়ি) না হয় — ঠিক পরে “া” থাকলে বাদ
+          if (w === 'বাস' && t.charAt(p + w.length) === 'া') { p = t.indexOf(w, p + 1); continue; }
+          return SUMMARY_TRANSPORT_MODES[i][1];
+        }
+      }
+      return '';
+    }
+    // খাওয়ার জায়গা — মূল রূপে মেলে (ক্যান্টিন ⊂ ক্যান্টিনে,
+    // মেস ⊂ মেসে), দীর্ঘতমটা আগে
+    var SUMMARY_MEAL_PLACES = ['টং দোকান', 'চায়ের দোকান', 'রেস্টুরেন্ট', 'রেস্তোরাঁ', 'ক্যান্টিন', 'হোটেল', 'ক্যাফে', 'ভাতঘর', 'বাসা', 'মেস'];
+    // কেনার উৎস (“<উৎস> থেকে ... কিনলাম”) — দীর্ঘতমটা আগে
+    var SUMMARY_BUY_SOURCES = ['মুদি দোকান', 'চায়ের দোকান', 'মিষ্টির দোকান', 'ফলের দোকান', 'মাছের বাজার', 'টং দোকান', 'সুপার শপ', 'সুপারশপ', 'কাঁচাবাজার', 'ফার্মেসি', 'লাইব্রেরি', 'রেস্টুরেন্ট', 'রেস্তোরাঁ', 'ক্যান্টিন', 'বেকারি', 'হোটেল', 'ক্যাফে', 'ভাতঘর', 'বাজার', 'দোকান', 'মেস'];
+    function summaryBuySource(t) {
+      for (var i = 0; i < SUMMARY_BUY_SOURCES.length; i++) {
+        var s = SUMMARY_BUY_SOURCES[i];
+        var p = t.indexOf(s);
+        if (p !== -1 && t.indexOf(' থেকে', p + s.length) !== -1) return s;
+      }
+      return '';
+    }
+    // ক্যাটাগরির সবচেয়ে নির্দিষ্ট (দীর্ঘতম) মিলে যাওয়া কীওয়ার্ডের
+    // পরিষ্কার রূপ — পরের-শব্দ সম্প্রসারণ আর “ও”-জোড়া ছাড়াই
+    function summaryCategoryPhrase(t, category, rules) {
+      var ruleList = null;
+      for (var r = 0; r < rules.length; r++) if (rules[r][0] === category) { ruleList = rules[r][1]; break; }
+      var best = null;
+      if (ruleList) {
+        for (var k = 0; k < ruleList.length; k++) {
+          var kw = ruleList[k];
+          if (!summaryKeywordHit(t, kw)) continue;
+          var cleaned = cleanSummaryKeyword(kw);
+          if (!cleaned) continue;
+          var score = String(kw).trim().length;
+          if (!best || score > best.score) best = { phrase: cleaned, score: score };
+        }
+      }
+      // “বাজারে … খরচ” — আলাদা শব্দ হিসেবে “বাজার” মিললেই লেবেল
+      if (category === 'বাজার-সদাই' && hasStandaloneBazar(t)) {
+        if (!best || best.score < 5) best = { phrase: 'বাজার', score: 5 };
+      }
+      return best ? best.phrase : '';
+    }
+    // সাধারণ ধাপে কীওয়ার্ডের গায়ে লেগে থাকা বিভক্তি (“গাড়িতে”)
+    // ঝেড়ে মূল রূপ আনা হয়, যাতে ষষ্ঠী ঠিকমতো বসে (“গাড়ির খরচ”)
+    function stripSummaryLocative(phrase) {
+      var p = String(phrase || '');
+      if (p.indexOf(' ') === -1 && p.length > 3 && p.slice(-2) === 'তে') return p.slice(0, -2);
+      return p;
+    }
+    // জমার পাঠানো মানুষ/উৎস — SENDER_WORDS দীর্ঘতমটা আগে মেলে
+    // (“ভাইয়া” আগে “ভাই” পরে, “মামা” আগে “মা” পরে)।
+    var SUMMARY_NON_PERSON_SENDERS = { 'টিউশন': 1, 'অফিস': 1, 'কোম্পানি': 1 };
+    function summaryIncomeSender(t) {
+      var words = SENDER_WORDS.map(function (w) { return String(w).trim(); }).filter(Boolean)
+        .sort(function (a, b) { return b.length - a.length; });
+      for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        var p = t.indexOf(w);
+        while (p !== -1) {
+          var after = t.charAt(p + w.length);
+          // “বোন” যেন “বোনাস” না হয়; “মা” যেন “মামা”/“জমা”র ভেতরে
+          // না মেলে — আগের-পরের দুই পাশেই শব্দ-সীমানা থাকতে হয়
+          if (w === 'বোন' && after === 'া') { p = t.indexOf(w, p + 1); continue; }
+          var before = p > 0 ? t.charAt(p - 1) : '';
+          if (w === 'মা' && ((after !== '' && after !== ' ') || (before !== '' && before !== ' '))) { p = t.indexOf(w, p + 1); continue; }
+          return w;
+        }
+      }
+      return '';
+    }
+    // খাওয়ার বিবরণ — সময় থাকলে সেটাই জেতে (“দুপুরের খাবারের
+    // খরচ”); নইলে জায়গা + খাবার (“ক্যান্টিনের স্যান্ডউইচের খরচ”),
+    // শুধু খাবার (“পরোটার খরচ”), বা সাধারণ খাবার (“খাবারের খরচ”)।
+    var SUMMARY_MEAL_TIMES = [
+      ['সকাল', 'সকালের খাবার', 'সকালের নাস্তা'],
+      ['দুপুর', 'দুপুরের খাবার', 'দুপুরের খাবার'],
+      ['রাত', 'রাতের খাবার', 'রাতের খাবার'],
+      ['সন্ধ্যা', 'সন্ধ্যার নাস্তা', 'সন্ধ্যার নাস্তা'],
+      ['ভোর', 'ভোরের নাস্তা', 'ভোরের নাস্তা']
+    ];
+    var SUMMARY_GENERIC_FOODS = { 'ভাত': 1, 'খাবার': 1, 'নাস্তা': 1 };
+    function summaryMealDesc(t) {
+      // সময় — যেটা বাক্যে আগে আসে সেটাই
+      var timeHit = null;
+      for (var i = 0; i < SUMMARY_MEAL_TIMES.length; i++) {
+        var p = t.indexOf(SUMMARY_MEAL_TIMES[i][0]);
+        if (p !== -1 && (!timeHit || p < timeHit.pos)) timeHit = { row: SUMMARY_MEAL_TIMES[i], pos: p };
+      }
+      if (timeHit) {
+        var mealPhrase = t.indexOf('নাস্তা') !== -1 ? timeHit.row[2] : timeHit.row[1];
+        return toPossessive(mealPhrase) + ' খরচ';
+      }
+      // খাবার — বাক্যে আগে আসা নামটাই প্রধান; দুটো খাবার কখনোই
+      // “ও” দিয়ে জোড়া হয় না (পুরনো “পাউরুটি ও রুটি” বাগ)
+      var found = [];
+      for (var f = 0; f < FOOD_NAME_WORDS.length; f++) {
+        var fw = FOOD_NAME_WORDS[f];
+        var pos = -1;
+        if (Object.prototype.hasOwnProperty.call(CATEGORY_WORD_GUARDS, fw)) {
+          if (CATEGORY_WORD_GUARDS[fw](t)) pos = t.indexOf(fw);
+        } else pos = t.indexOf(fw);
+        if (pos !== -1) found.push({ w: fw, pos: pos });
+      }
+      if (hasTeaWord(t)) found.push({ w: 'চা', pos: Math.max(t.indexOf('চা'), 0) });
+      if (hasWaterWord(t)) found.push({ w: 'পানি', pos: Math.max(t.indexOf('পানি'), 0) });
+      found.sort(function (a, b) { return a.pos - b.pos; });
+      var food = found.length ? found[0].w : '';
+      var place = '';
+      for (var j = 0; j < SUMMARY_MEAL_PLACES.length; j++) {
+        if (t.indexOf(SUMMARY_MEAL_PLACES[j]) !== -1) { place = SUMMARY_MEAL_PLACES[j]; break; }
+      }
+      if (food && !SUMMARY_GENERIC_FOODS[food]) {
+        return place ? toPossessive(place) + ' ' + toPossessive(food) + ' খরচ' : toPossessive(food) + ' খরচ';
+      }
+      // সাধারণ খাবার (ভাত/খাবার/নাস্তা) বা নামহীন খাওয়া
+      return place ? toPossessive(place) + ' খাবারের খরচ' : 'খাবারের খরচ';
+    }
+    // কেনা জিনিসটা — কেনার ক্রিয়ার আগের অর্থবহ বিশেষ্যগুলোর শেষটা;
+    // যৌগিক নামে ঠিক আগের বিশেষ্যটাও জোড়া হয় (“টেবিল ল্যাম্প”,
+    // “বাসের টিকিট”), কিন্তু বিভক্তি-লাগা রূপ (ে/তে/য় দিয়ে শেষ)
+    // কখনোই জুড়বে না — পুরনো “অটো তে” বাগটা এমন জোড়া থেকেই
+    // এসেছিল। উৎসের (“মুদি দোকান থেকে”) শব্দগুলো জিনিস নয়।
+    function summaryBuyItem(t, src) {
+      var buyPos = -1;
+      var i, p;
+      for (i = 0; i < BUY_WORDS.length; i++) {
+        p = t.indexOf(BUY_WORDS[i]);
+        if (p !== -1 && (buyPos === -1 || p < buyPos)) buyPos = p;
+      }
+      if (buyPos === -1) {
+        var kor = ['করলাম', 'করেছি'];
+        for (i = 0; i < kor.length; i++) {
+          p = t.indexOf(kor[i]);
+          if (p !== -1 && (buyPos === -1 || p < buyPos)) buyPos = p;
+        }
+      }
+      if (buyPos === -1) return '';
+      var srcToks = src ? src.split(/\s+/) : [];
+      var btoks = summaryTokens(t.slice(0, buyPos));
+      var cand = [];
+      for (i = 0; i < btoks.length; i++) {
+        if (srcToks.indexOf(btoks[i]) !== -1) continue;
+        if (isSummaryContentToken(btoks[i])) cand.push(btoks[i]);
+      }
+      if (!cand.length) return '';
+      var item = cand[cand.length - 1];
+      if (cand.length >= 2) {
+        var prev = cand[cand.length - 2];
+        if (!/(ে|তে|য়)$/.test(prev) && SUMMARY_MEAL_PLACES.indexOf(prev) === -1) item = prev + ' ' + item;
+      }
+      return item;
+    }
     function buildVoiceSummary(text, type, category) {
       var t = String(text || '');
       var desc = '';
-      // ১) ক্রিপ্টো / P2P — “বাইনান্স P2P”-ই সবচেয়ে নির্দিষ্ট লেবেল
+      // ১) ক্রিপ্টো / P2P — “বাইনান্স P2P থেকে পাওয়া”
       if (t.indexOf('P2P') !== -1) {
-        desc = t.indexOf('বাইনান্স') !== -1 ? 'বাইনান্স P2P' : 'P2P';
+        desc = (t.indexOf('বাইনান্স') !== -1 ? 'বাইনান্স P2P' : 'P2P') + ' থেকে পাওয়া';
       }
       // ২) অন্য কেউ আমার থেকে ধার/টাকা নিয়েছে — “ওমরের ধার”
       if (!desc && thirdPartyTookFromMe(t)) {
@@ -2345,77 +2560,63 @@
           desc = nameTok + gen + ' ' + loanWord;
         } else desc = loanWord;
       }
-      // ৩) খাবার — খাবারের নামগুলোই লেবেল। একাধিক নাম থাকলে জোড়া
-      //    হয় (“পরোটা ও ডিম”), ক্যান্টিনের কথা থাকলে সেটা আগে বসে।
-      //    একটা নাম পাওয়া গেলে মনে রাখা হয় — নিচের ধাপে আরও
-      //    নির্দিষ্ট বাক্যাংশ (যেমন “সকালের নাস্তা”) মিললে সেটাই জেতে।
-      var foodSingle = '';
-      if (!desc && type === 'expense' && category === 'খাবার') {
-        var found = [];
-        for (var f = 0; f < FOOD_NAME_WORDS.length; f++) {
-          var fw = FOOD_NAME_WORDS[f];
-          var pos = -1;
-          if (Object.prototype.hasOwnProperty.call(CATEGORY_WORD_GUARDS, fw)) {
-            if (CATEGORY_WORD_GUARDS[fw](t)) pos = t.indexOf(fw);
-          } else pos = t.indexOf(fw);
-          if (pos !== -1) found.push({ w: fw, pos: pos });
-        }
-        if (hasTeaWord(t)) found.push({ w: 'চা', pos: Math.max(t.indexOf('চা'), 0) });
-        if (hasWaterWord(t)) found.push({ w: 'পানি', pos: Math.max(t.indexOf('পানি'), 0) });
-        found.sort(function (a, b) { return a.pos - b.pos; });
-        var items = [];
-        for (var fi = 0; fi < found.length; fi++) if (items.indexOf(found[fi].w) === -1) items.push(found[fi].w);
-        if (items.length >= 2) {
-          var canteen = (t.indexOf('ক্যান্টিনে') !== -1 || t.indexOf('ক্যান্টিন') !== -1);
-          var take = canteen ? items.slice(0, 2) : items.slice(0, 3);
-          desc = (canteen ? 'ক্যান্টিনে ' : '') + take.join(' ও ');
-        } else if (items.length === 1) {
-          foodSingle = items[0];
+      // ৩) জমা — পাঠানো মানুষ হলে “<মানুষ>র থেকে পাওয়া”
+      //    (আব্বুর থেকে পাওয়া), প্রতিষ্ঠান/উৎস হলে সরাসরি
+      //    “<উৎস> থেকে পাওয়া” (টিউশন থেকে পাওয়া)
+      if (!desc && type === 'income') {
+        var sender = summaryIncomeSender(t);
+        if (sender) {
+          desc = SUMMARY_NON_PERSON_SENDERS[sender] ? sender + ' থেকে পাওয়া' : toPossessive(sender) + ' থেকে পাওয়া';
+        } else {
+          // উৎস না মিললে ক্যাটাগরির কীওয়ার্ড-লেবেলই (আগের আচরণ)
+          desc = summaryCategoryPhrase(t, category, INCOME_CAT_RULES);
         }
       }
-      // ৪) ক্যাটাগরির সবচেয়ে নির্দিষ্ট (দীর্ঘতম) মিলে যাওয়া কীওয়ার্ড
-      if (!desc) {
-        var ruleList = null;
-        var allRules = type === 'income' ? INCOME_CAT_RULES : CAT_RULES;
-        for (var r = 0; r < allRules.length; r++) if (allRules[r][0] === category) { ruleList = allRules[r][1]; break; }
-        var best = null;
-        if (ruleList) {
-          for (var k2 = 0; k2 < ruleList.length; k2++) {
-            var kw = ruleList[k2];
-            if (!summaryKeywordHit(t, kw)) continue;
-            var cleaned = cleanSummaryKeyword(kw);
-            if (!cleaned) continue;
-            var score = String(kw).trim().length;
-            if (!best || score > best.score) best = { kw: String(kw).trim(), phrase: cleaned, score: score };
-          }
-        }
-        // “বাজারে … খরচ” — আলাদা শব্দ হিসেবে “বাজার” মিললেই লেবেল
-        if (type === 'expense' && category === 'বাজার-সদাই' && hasStandaloneBazar(t)) {
-          if (!best || best.score < 5) best = { kw: 'বাজার', phrase: 'বাজার', score: 5 };
-        }
-        if (best) {
-          desc = best.phrase;
-          // এক-শব্দের লেবেলের ঠিক পরের বিশেষ্যটা জোড়া হয় —
-          // “টেবিল ল্যাম্প”, “রিকশা ভাড়া”, “ইন্টারনেট বিল”।
-          // ক্রিয়ার শেষ-রূপ (লাম/লো/ছে/ছি...) কখনোই জুড়বে না,
-          // আর বহু-শব্দের কীওয়ার্ড মিললে সম্প্রসারণ হয় না
-          // (“বাজার থেকে” মিলে “বাজার চাল” হবে না)।
-          if (desc.indexOf(' ') === -1 && best.kw.indexOf(' ') === -1) {
-            var at = t.indexOf(best.kw);
-            if (at !== -1) {
-              var afterTok = summaryTokens(t.slice(at + best.kw.length))[0];
-              if (afterTok && isSummaryContentToken(afterTok) && desc !== afterTok &&
-                  !/(লাম|লেন|লো|ছি|ছে|ছেন|য়েছি|য়েছে)$/.test(afterTok)) {
-                desc = desc + ' ' + afterTok;
-              }
-            }
-          }
-        }
-        // খাবারের একটিমাত্র নাম পাওয়া গেলে সেটাই — সাধারণ
-        // “খাবার” লেবেলের চেয়ে নির্দিষ্ট নামটাই ভালো
-        if (foodSingle && (!desc || desc === 'খাবার')) desc = foodSingle;
+      // ৪) খরচ — খাওয়া। খাওয়ার আগেই চলে, যাতে বাসে বসে খেলেও
+      //    বিবরণ খাবারেরই হয়, ভাড়ার নয়
+      if (!desc && type === 'expense' && hasAnyWord(t, SUMMARY_EAT_VERBS)) {
+        desc = summaryMealDesc(t);
       }
-      // ৫) কিছুই না মিললে — বাক্যের প্রথম দিকের অর্থবহ শব্দগুলো
+      // ৫) খরচ — যাতায়াতের ভাড়া: মাধ্যম থাকলেই “<মাধ্যম> ভাড়ার
+      //    খরচ” — “ভাড়া” শব্দটা বলা না থাকলেও ভাড়াই ধরা হয়
+      //    (“অটোতে গেলাম ৫০ টাকা” = অটো ভাড়ার খরচ)। কেনা/খাওয়ার
+      //    ক্রিয়া থাকলে এই ধাপ নয় (“বাসের টিকিট কিনলাম” কেনা)।
+      if (!desc && type === 'expense' && !hasAnyWord(t, BUY_WORDS) && !hasAnyWord(t, SUMMARY_EAT_VERBS)) {
+        var mode = summaryTransportMode(t);
+        if (mode) desc = mode + ' ভাড়ার খরচ';
+      }
+      // ৬) খরচ — কেনা: উৎস থাকলে “<উৎস> থেকে <জিনিস>র খরচ”
+      //    (বেকারি থেকে পাউরুটির খরচ), নইলে “<জিনিস> কেনার খরচ”
+      //    (মেরিল কেনার খরচ)। কেনাকাটা-জাতীয় ক্যাটাগরিতে খালি
+      //    “করলাম”ও কেনা ধরা হয় (“জ্যাকেট করলাম”)।
+      if (!desc && type === 'expense') {
+        var korlamBuy = (t.indexOf('করলাম') !== -1 || t.indexOf('করেছি') !== -1) &&
+          (category === 'কেনাকাটা' || category === 'বাজার-সদাই' || category === 'শিক্ষা');
+        if (hasAnyWord(t, BUY_WORDS) || korlamBuy) {
+          var src = summaryBuySource(t);
+          var item = summaryBuyItem(t, src);
+          // খালি “বাজার” (বাজার করলাম) কেনা-প্যাটার্নে যায় না —
+          // সাধারণ ধাপে “বাজারের খরচ” হবে
+          if (item && item !== 'বাজার') {
+            desc = src ? src + ' থেকে ' + toPossessive(item) + ' খরচ' : item + ' কেনার খরচ';
+          }
+        }
+      }
+      // ৭) খরচ — সাধারণ: ক্যাটাগরির সবচেয়ে নির্দিষ্ট কীওয়ার্ড
+      //    দিয়ে “<কীওয়ার্ড>র খরচ” (বাজারের খরচ, বিদ্যুৎ বিলের
+      //    খরচ, ডাক্তারের খরচ); কীওয়ার্ড না মিললে ক্যাটাগরির
+      //    মূল নাম দিয়ে
+      if (!desc && type === 'expense') {
+        var phrase = summaryCategoryPhrase(t, category, CAT_RULES);
+        if (phrase) {
+          desc = toPossessive(stripSummaryLocative(phrase)) + ' খরচ';
+        } else {
+          var baseMap = { 'বাজার-সদাই': 'বাজার', 'খাবার': 'খাবার', 'যাতায়াত': 'যাতায়াত', 'বিল ও ভাড়া': 'বিল', 'স্বাস্থ্য': 'স্বাস্থ্য', 'শিক্ষা': 'শিক্ষা', 'কেনাকাটা': 'কেনাকাটা', 'বিনোদন': 'বিনোদন' };
+          if (baseMap[category]) desc = toPossessive(baseMap[category]) + ' খরচ';
+          else if (category === 'অন্যান্য') desc = 'অন্যান্য খরচ';
+        }
+      }
+      // ৮) কিছুই না মিললে — বাক্যের প্রথম দিকের অর্থবহ শব্দগুলো
       //    (সংখ্যা/ক্রিয়া/টাকা বাদে) দিয়ে ছোট লেবেল
       if (!desc) {
         var toks = summaryTokens(t);
@@ -2425,14 +2626,17 @@
         }
         desc = keep.join(' ');
       }
-      if (!desc) desc = category;
+      if (!desc) desc = type === 'expense' ? category + ' খরচ' : category;
       // শেষ নিরাপত্তা: লেবেল কখনোই “টাকা/টাকার” দিয়ে শেষ হয় না,
-      // ঝুলন্ত ক্রিয়া নিয়েও বসে না — সেক্ষেত্রে ক্যাটাগরিই লেবেল।
+      // ঝুলন্ত ক্রিয়া নিয়েও বসে না — সেক্ষেত্রে ক্যাটাগরিই লেবেল
+      // (খরচের ক্ষেত্রে লেবেল = ক্যাটাগরি + ' খরচ', খালি নাম নয়)।
       // যাচাইটা শুধু ক্রিয়ার তালিকা দিয়ে হয় — বিশেষ্য (খাবার/
       // বিল/ধার/নাস্তা...) বৈধ শেষ-শব্দ, থামানো হয় না।
       var dtoks = desc.split(/\s+/);
       var lastTok = dtoks[dtoks.length - 1];
-      if (lastTok === 'টাকা' || lastTok === 'টাকার' || SUMMARY_VERB_WORDS[lastTok]) desc = category;
+      // “খরচ” এখানে ঝুলন্ত ক্রিয়া নয় — প্যাটার্নের বিশেষ্য-শেষ
+      // (“অটো ভাড়ার খরচ”), তাই সেটা বৈধ শেষ-শব্দ হিসেবেই থাকে
+      if (lastTok === 'টাকা' || lastTok === 'টাকার' || (SUMMARY_VERB_WORDS[lastTok] && lastTok !== 'খরচ' && lastTok !== 'ব্যয়')) desc = type === 'expense' ? category + ' খরচ' : category;
       if (desc.length > 40) desc = desc.slice(0, 40).trim();
       return desc;
     }
