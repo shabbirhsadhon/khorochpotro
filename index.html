@@ -1306,12 +1306,18 @@
             <label for="ghPassInput">পাসফ্রেজ <span class="field-status" id="ghPassStatus"></span></label>
             <input id="ghPassInput" type="password" autocomplete="new-password" placeholder="পাসফ্রেজ বসান" />
           </div>
+          <div class="field">
+            <label for="ghNameInput">ব্যাকআপের নাম <span class="field-status" id="ghNameStatus"></span></label>
+            <input id="ghNameInput" type="text" autocomplete="off" placeholder="যেমন: rahim" />
+          </div>
         </div>
         <div class="backup-actions">
           <button class="btn btn-tonal btn-sm" type="button" id="ghTokenSaveBtn">টোকেন সংরক্ষণ করুন</button>
           <button class="btn btn-danger-ghost btn-sm" type="button" id="ghTokenClearBtn" style="display:none">টোকেন মুছুন</button>
           <button class="btn btn-tonal btn-sm" type="button" id="ghPassSaveBtn">পাসফ্রেজ সংরক্ষণ করুন</button>
           <button class="btn btn-danger-ghost btn-sm" type="button" id="ghPassClearBtn" style="display:none">পাসফ্রেজ মুছুন</button>
+          <button class="btn btn-tonal btn-sm" type="button" id="ghNameSaveBtn">নাম সংরক্ষণ করুন</button>
+          <button class="btn btn-danger-ghost btn-sm" type="button" id="ghNameClearBtn" style="display:none">নাম মুছুন</button>
           <span class="hint warn-line">পাসফ্রেজ ভুলে গেলে ব্যাকআপ ফেরত পাওয়া যাবে না।</span>
         </div>
         <p class="hint" id="ghStatus" style="margin:8px 0 0"></p>
@@ -1550,6 +1556,7 @@
      'parserModelVersion', 'parserModelStatus', 'parserModelBtn',
      'ghTokenInput', 'ghTokenSaveBtn', 'ghTokenClearBtn', 'ghTokenStatus',
      'ghPassInput', 'ghPassSaveBtn', 'ghPassClearBtn', 'ghPassStatus', 'ghSyncStatus', 'ghStatus',
+     'ghNameInput', 'ghNameSaveBtn', 'ghNameClearBtn', 'ghNameStatus',
      'ghMinToggle', 'backupPanel', 'ghSettingsBody'
     ].forEach(function (id) { els[id] = $(id); });
 
@@ -4587,8 +4594,10 @@
 
     /* ============================================================
        গিটহাব স্বয়ংক্রিয় ব্যাকআপ — shabbirhsadhon/khorochpotro
-       রিপোজিটরির backup/khorochpotro-backup.json ফাইলে সব হিসাব
-       জমা থাকে। কোনো বোতাম নেই: প্রতিটি বদল নিজে নিজেই সিঙ্ক হয়,
+       রিপোজিটরির backup/ ফোল্ডারে সব হিসাব জমা থাকে; কোন ফাইলে
+       যাবে তা ঠিক হয় getBackupPath() দিয়ে (নিচে দেখুন — নাম
+       না থাকলে আগের মূল ফাইল, নাম থাকলে সেই নামের আলাদা ফাইল)।
+       কোনো বোতাম নেই: প্রতিটি বদল নিজে নিজেই সিঙ্ক হয়,
        খোলার সময় সর্বশেষ ব্যাকআপ এসে স্থানীয় হিসাবের সঙ্গে মিলে
        যায়। ব্যাকআপ ফাইলটা গিটহাবে ওঠার আগে ব্যবহারকারীর
        পাসফ্রেজ দিয়ে এই ডিভাইসেই AES-GCM এনক্রিপ্ট হয় — গিটহাবে
@@ -4596,7 +4605,32 @@
        ডিভাইসের ব্রাউজারেই থাকে, আর কোথাও পাঠানো হয় না (টোকেন
        শুধু সিঙ্কের সময় গিটহাবের কাছেই যায়)।
        ============================================================ */
-    var GH_CONTENTS_URL = 'https://api.github.com/repos/shabbirhsadhon/khorochpotro/contents/backup/khorochpotro-backup.json';
+    var GH_API_BASE = 'https://api.github.com/repos/shabbirhsadhon/khorochpotro/contents/';
+    /* ---------- ব্যাকআপের নাম: প্রত্যেক ইউজারের আলাদা ফাইল ----------
+       একই রিপো আর একই টোকেন থাকলেও প্রত্যেক ইউজার নিজের নাম
+       বসালে তার ব্যাকআপ তার নামের আলাদা ফাইলে যায় — দুইজনের
+       ডেটা কখনো এক ফাইলে মেশে না। নামটা টোকেন/পাসফ্রেজের মতোই
+       শুধু এই ডিভাইসের localStorage-এ থাকে। নাম খালি থাকলে
+       আগের মূল ফাইলটাই ব্যবহার হয়, তাই পুরনো ডেটা যেখানে ছিল
+       সেখানেই থাকে — কোনো মাইগ্রেশন লাগে না। */
+    var GH_NAME_KEY = 'khorochpotro_backup_name';
+    var ghBackupName = '';
+    try { ghBackupName = localStorage.getItem(GH_NAME_KEY) || ''; } catch (e) { ghBackupName = ''; }
+    // নামটাকে নিরাপদ ফাইলের নামে বদলানো: ছোট হাতের a-z, 0-9 আর
+    // হাইফেন ছাড়া সবকিছু (স্পেস, বাংলা, চিহ্ন) হাইফেন হয়ে যায়
+    // বা বাদ পড়ে; সর্বোচ্চ ২০ অক্ষর। পরিষ্কারের পর খালি হলে
+    // সেটা নাম-নেই বলেই ধরা হয়।
+    function sanitizeBackupName(raw) {
+      var s = String(raw == null ? '' : raw).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      s = s.replace(/^-+|-+$/g, '');
+      if (s.length > 20) s = s.slice(0, 20).replace(/-+$/g, '');
+      return s;
+    }
+    function getBackupPath() {
+      var n = sanitizeBackupName(ghBackupName);
+      return n ? 'backup/khorochpotro-backup-' + n + '.json' : 'backup/khorochpotro-backup.json';
+    }
+    function ghContentsUrl() { return GH_API_BASE + getBackupPath(); }
     var GH_TOKEN_KEY = 'khorochpotro_gh_token';
     var ghToken = '';
     try { ghToken = localStorage.getItem(GH_TOKEN_KEY) || ''; } catch (e) { ghToken = ''; }
@@ -4727,6 +4761,48 @@
       ghSetStatus('পাসফ্রেজ মোছা হয়েছে — সিঙ্ক বন্ধ।');
     });
 
+    /* ---------- ব্যাকআপের নাম: এই ডিভাইসের ব্যাকআপ কোন ফাইলে যাবে ----------
+       নাম সেভ হলেই সিঙ্কের লক্ষ্য ফাইল বদলে যায় (getBackupPath),
+       তাই সেভ/মোছার পর টোকেন/পাসফ্রেজের মতোই নতুন ফাইল থেকে
+       টেনে আনা আর পুশ — দুটোই আবার চলে। নামটা টোকেনের মতো
+       গোপন নয়, তাই সেভ থাকলে ইনপুটে দেখাও যায়। */
+    function renderGhNameUI() {
+      var clean = sanitizeBackupName(ghBackupName);
+      els.ghNameStatus.textContent = clean ? 'সংরক্ষিত আছে' : 'বসানো হয়নি';
+      els.ghNameClearBtn.style.display = ghBackupName ? 'inline-flex' : 'none';
+      els.ghNameInput.placeholder = clean ? ('বর্তমান নাম: ' + clean) : 'যেমন: rahim';
+    }
+    function ghSaveBackupName(n) {
+      ghBackupName = n;
+      try {
+        if (n) localStorage.setItem(GH_NAME_KEY, n);
+        else localStorage.removeItem(GH_NAME_KEY);
+      } catch (e) {}
+      renderGhNameUI();
+      renderSyncStatus();
+    }
+    els.ghNameSaveBtn.addEventListener('click', function () {
+      var raw = els.ghNameInput.value;
+      var clean = sanitizeBackupName(raw);
+      if (raw.trim() && !clean) { ghSetStatus('নামে শুধু ইংরেজি অক্ষর (a-z) আর সংখ্যা ব্যবহার করুন।'); els.ghNameInput.focus(); return; }
+      ghSaveBackupName(clean);
+      els.ghNameInput.value = clean;
+      ghSetStatus(clean
+        ? 'ব্যাকআপের নাম সংরক্ষণ হয়েছে — ব্যাকআপ এখন ' + getBackupPath() + ' ফাইলে যাবে।'
+        : 'ব্যাকআপের নাম খালি — ব্যাকআপ আগের ' + getBackupPath() + ' ফাইলেই যাবে।');
+      showToast('ব্যাকআপের নাম সংরক্ষণ হয়েছে');
+      if (state.entries.length > 0) { syncMeta.pendingSync = true; saveLocal(); }
+      pullLatestOnLoad();
+      schedulePush();
+    });
+    els.ghNameClearBtn.addEventListener('click', function () {
+      ghSaveBackupName('');
+      els.ghNameInput.value = '';
+      ghSetStatus('ব্যাকআপের নাম মোছা হয়েছে — ব্যাকআপ এখন আগের ' + getBackupPath() + ' ফাইলেই যাবে।');
+      pullLatestOnLoad();
+      schedulePush();
+    });
+
     /* ---------- ব্যাকআপ সেটিংস গোটানো/খোলা (minimize/maximize) ----------
        টোকেন আর পাসফ্রেজ দুটোই সেভ থাকলেই গোটানোর বোতামটা দেখায়।
        গোটানো শুধু ইনপুটের জায়গাগুলো লুকায় — টোকেন/পাসফ্রেজ আর
@@ -4788,7 +4864,7 @@
       // cache: 'no-store' জরুরি — গিটহাবের API উত্তর ক্যাশে রাখতে
       // দেয় (max-age=60), তাই ছাড়া রিলোডে ব্রাউজার আগের (সম্পাদনার
       // আগের) ব্যাকআপটাই ফেরত দিতে পারে আর নতুন বিবরণ আসে না।
-      return fetchWithTimeout(GH_CONTENTS_URL, { headers: headers, cache: 'no-store' }, 8000).then(function (res) {
+      return fetchWithTimeout(ghContentsUrl(), { headers: headers, cache: 'no-store' }, 8000).then(function (res) {
         if (res.status === 404) return null;
         if (res.status === 401) throw new Error('টোকেনটি গিটহাব মানছে না (401)। টোকেনটা ঠিক করে আবার বসান।');
         if (!res.ok) throw new Error('গিটহাব থেকে উত্তর পাওয়া যায়নি (এরর ' + res.status + ')। একটু পরে আবার চেষ্টা হবে।');
@@ -5183,7 +5259,7 @@
         };
         var body = { message: 'chore: sync encrypted backup', content: utf8ToB64(JSON.stringify(wrapper, null, 2)) };
         if (sha) body.sha = sha;
-        return fetchWithTimeout(GH_CONTENTS_URL, {
+        return fetchWithTimeout(ghContentsUrl(), {
           method: 'PUT',
           headers: { 'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + ghToken, 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -5526,6 +5602,8 @@
       refreshMicPermission();
       renderGhTokenUI();
       renderGhPassUI();
+      renderGhNameUI();
+      if (ghBackupName) els.ghNameInput.value = sanitizeBackupName(ghBackupName);
       renderSyncStatus();
       initParserModel();
       enhanceSelect(els.monthInput);
