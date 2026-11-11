@@ -1143,12 +1143,11 @@
         .grid {
           grid-template-columns: 400px minmax(0, 1fr) 380px;
           grid-template-areas:
-            "model history form"
-            "backup history budget";
+            "left history form"
+            "left history budget";
           align-items: stretch;
         }
-        .parser-model-panel { grid-area: model; }
-        .backup-panel { grid-area: backup; }
+        .left-col { grid-area: left; }
         .history-panel { grid-area: history; }
         #entryFormPanel { grid-area: form; }
         .budget-panel { grid-area: budget; }
@@ -1223,11 +1222,18 @@
       .voice-pop::-webkit-scrollbar-track { background: transparent; }
       .voice-pop::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
       @media (prefers-reduced-motion: reduce) { .voice-pop, .voice-pop .vp-inner, .fab { transition: none !important; } }
+      /* ================= v82: বাম কলামের মোড়ক =================
+         মোবাইলে (<1248px) display:contents — মোড়কটা বাক্স তৈরি করে না,
+         তাই এক কলামের প্রবাহে কোনো বদল আসে না (পার্সার মডেল আর ব্যাকআপ
+         আগের মতোই 14px ফাঁকে পরপর থাকে)। ডেস্কটপে (নিচের v81 ওভাররাইড)
+         মোড়কটা flex কলাম হয়ে দুটো কার্ডকে ওপরে আঁটসাঁট রাখে। */
+      .left-col { display: contents; }
       /* ================= v81: ডেস্কটপ (≥1248px) তিন কলাম =================
          মোবাইলে (<1248px) ওপরের .grid.single-col নিয়মই থাকে (এক কলাম)।
          ডেস্কটপে গ্রিড আবার চালু হয় — .grid.single-col-এর display:block
          নিয়মটাকে এখানে হারিয়ে দেওয়া হয় (একই নির্দিষ্টতা, পরে থাকায়)।
-         বাম: পার্সার মডেল + গিটহাব ব্যাকআপ; মাঝ: হিস্টোরি (দুই সারি);
+         বাম: পার্সার মডেল + গিটহাব ব্যাকআপ (v82: একই মোড়কে, ওপরে
+         আঁটসাঁট — মাঝের ~180px ফাঁকা জায়গা বন্ধ); মাঝ: হিস্টোরি (দুই সারি);
          ডান: ম্যানুয়াল এন্ট্রি + মাসিক বাজেট। ছয়টি ব্লকই গ্রিডের
          ভেতরে থাকে (মোড়কের বন্ধ-ট্যাগ ব্যাকআপের পরে)। পিডিএফ বোতাম ডেস্কটপে
          হিস্টোরি কার্ডের ভেতরে থাকে (placePdfBtn), তাই খালি .pdf-slot
@@ -1237,15 +1243,29 @@
           display: grid;
           grid-template-columns: 400px minmax(0, 1fr) 380px;
           grid-template-areas:
-            "model history form"
-            "backup history budget";
+            "left history form"
+            "left history budget";
           gap: 14px;
           align-items: stretch;
         }
         .grid.single-col > section { margin-bottom: 0; }
         .grid.single-col > .pdf-slot { display: none; }
-        .parser-model-panel { grid-area: model; margin-bottom: 0; }
-        .backup-panel { grid-area: backup; }
+        /* v82: বাম কলাম একটাই গ্রিড আইটেম — মোড়ক দুই সারি জুড়ে থাকে
+           (align-self:start, তাই ওপরের দিকে আঁটসাঁট থাকে) আর ভেতরে
+           flex কলামে 14px ফাঁকে পার্সার মডেল + ব্যাকআপ বসে। মডেল বক্স
+           টেনে বড় করা হয়নি; ভেতরের margin গুলো 0 করে দেওয়া হয়েছে,
+           নইলে flex gap-এর সঙ্গে যোগ হয়ে ফাঁক 28px/42px হয়ে যেত। */
+        .left-col {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          grid-area: left;
+          grid-row: 1 / -1;
+          align-self: start;
+          min-width: 0;
+        }
+        .left-col .parser-model-panel { margin-bottom: 0; }
+        .left-col .backup-panel { margin-top: 0; }
         .history-panel { grid-area: history; }
         #entryFormPanel { grid-area: form; }
         .budget-panel { grid-area: budget; }
@@ -1456,6 +1476,7 @@
       </div>
 
       <!-- GitHub backup — কমপ্যাক্ট: শুধু ইনপুট, সংরক্ষণ আর এক লাইনের অবস্থা -->
+            <div class="left-col">
             <section class="parser-model-panel" aria-label="পার্সার মডেল">
 <div class="model-box" id="parserModelBox">
               <div class="model-update">
@@ -1514,6 +1535,7 @@
         </details>
         </div></div>
       </section>
+            </div>
       </div>
 
       <footer class="page">
