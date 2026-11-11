@@ -290,6 +290,18 @@
       .stat-btn:active { background: var(--surface-2); }
       .stat .s-more { display: block; margin-top: 6px; font-size: 12.5px; font-weight: 600; color: var(--primary); }
 
+      /* ---------- গড় দৈনিক খরচ থেকে ক্যাটাগরি বাদ (v79) ----------
+         চেকবক্স তালিকা — টিক দেওয়া ক্যাটাগরিটা গড় থেকে বাদ যায়।
+         মোডালের .modal-card-এর পাতলা স্বচ্ছ-ট্র্যাক স্ক্রলবারই চলে। */
+      .avg-ex-list { display: grid; gap: 8px; margin-top: 14px; }
+      .avg-ex-row { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer; font-size: 14.5px; }
+      .avg-ex-row input { width: 18px; height: 18px; accent-color: var(--primary); flex: none; cursor: pointer; }
+      .avg-ex-row .x-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+      .avg-ex-row .x-name .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+      .avg-ex-row .x-amt { font-weight: 700; white-space: nowrap; color: var(--expense); }
+      .avg-ex-row.excluded { border-color: var(--primary); background: var(--surface-2); }
+      .avg-ex-actions { display: flex; justify-content: flex-end; margin-top: 14px; }
+
       /* ---------- সময়ের খরচের প্রিভিউ (মোডাল) ---------- */
       .modal-overlay {
         position: fixed; inset: 0; z-index: 50; background: rgba(10, 20, 16, 0);
@@ -1229,11 +1241,12 @@
           <span class="s-sub" id="monthIncomeLine" style="display:block">মাসের জমা ৳ ০</span>
           <span class="s-more">ক্যাটাগরি অনুযায়ী দেখুন ›</span>
         </button>
-        <div class="card stat">
-          <div class="s-lbl"><span class="dot" style="background:var(--cat-6)"></span>গড় দৈনিক খরচ</div>
-          <div class="s-val" id="avgDailyVal">৳ ০</div>
-          <div class="s-sub" id="avgDailySub">নির্বাচিত মাস অনুযায়ী</div>
-        </div>
+        <button class="card stat stat-btn" type="button" id="statAvg" aria-haspopup="dialog">
+          <span class="s-lbl"><span class="dot" style="background:var(--cat-6)"></span>গড় দৈনিক খরচ</span>
+          <span class="s-val" id="avgDailyVal" style="display:block">৳ ০</span>
+          <span class="s-sub" id="avgDailySub" style="display:block">নির্বাচিত মাস অনুযায়ী</span>
+          <span class="s-more">ক্যাটাগরি বাদ দিন ›</span>
+        </button>
       </section>
 
       <div class="grid">
@@ -1497,6 +1510,24 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="avgExcludeModal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="avgExcludeTitle">
+        <div class="modal-head">
+          <div>
+            <h3 id="avgExcludeTitle">গড় থেকে ক্যাটাগরি বাদ দিন</h3>
+            <p class="modal-sub" id="avgExcludeSub">টিক দেওয়া ক্যাটাগরির খরচ গড় দৈনিক খরচে ধরা হবে না। দিনের সংখ্যা একই থাকবে।</p>
+          </div>
+          <button class="icon-btn modal-close" id="avgExcludeClose" type="button" aria-label="বন্ধ করুন">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-total"><span>বাদ দেওয়ার পর গড়</span><strong id="avgExcludeAvgVal">৳ ০</strong></div>
+        <p class="modal-sub" id="avgExcludeSummary"></p>
+        <div class="avg-ex-list" id="avgExcludeList"></div>
+        <div class="avg-ex-actions"><button class="btn btn-tonal btn-sm" type="button" id="avgExcludeClearBtn">সব বাদ মুছুন</button></div>
+      </div>
+    </div>
+
     <div id="toast" role="status"></div>
 
     <!-- খোলার সময় রিস্টোর পর্দা: সার্ভারের ব্যাকআপ সবার আগে রিস্টোর হয়, তারপর অ্যাপ -->
@@ -1544,6 +1575,7 @@
       editingId: null,
       selectedMonth: '',      // 'YYYY-MM'
       budgets: {},            // 'YYYY-MM' -> poisha
+      avgExclude: [],         // গড় দৈনিক খরচ থেকে বাদ দেওয়া খরচের ক্যাটাগরি (v79)
       filter: { q: '', period: 'all', type: 'all', cat: 'all' }
     };
 
@@ -1674,7 +1706,9 @@
     var els = {};
     ['todayLine', 'monthInput', 'monthPrevBtn', 'monthNextBtn', 'pdfBtn', 'balanceVal', 'totalIncomeVal', 'totalExpenseVal',
      'todayExpenseVal', 'todayIncomeLine', 'weekExpenseVal', 'weekIncomeLine', 'monthExpenseLbl', 'monthExpenseVal',
-     'statToday', 'statWeek', 'statMonth', 'periodModal', 'periodModalTitle', 'periodModalSub', 'periodModalTotal',
+     'statToday', 'statWeek', 'statMonth', 'statAvg', 'avgExcludeModal', 'avgExcludeClose', 'avgExcludeList',
+     'avgExcludeSummary', 'avgExcludeAvgVal', 'avgExcludeClearBtn',
+     'periodModal', 'periodModalTitle', 'periodModalSub', 'periodModalTotal',
      'periodModalBody', 'periodModalEntries', 'periodModalClose',
      'periodModalDonutBox', 'periodModalDonutSvg', 'periodModalDonutTotal', 'periodModalDonutLbl',
      'monthIncomeLine', 'avgDailyVal', 'avgDailySub', 'entryFormPanel', 'entryForm', 'typeSeg', 'segExpense', 'segIncome', 'amountInput',
@@ -3030,10 +3064,98 @@
       els.monthExpenseVal.textContent = fmtMoney(mExp);
       els.monthIncomeLine.textContent = 'মাসের জমা ' + fmtMoney(mInc);
       var days = elapsedDaysInMonth(ym);
-      var avg = days > 0 ? Math.round(mExp / days) : 0;
+      // গড় শুধু বাদ-না-দেওয়া ক্যাটাগরির খরচে — দিনের সংখ্যা একই থাকে,
+      // মাসের মোট (mExp), আজ/সপ্তাহের মোট, ডেইলি খরচ, ক্যাটাগরি ভাগ
+      // আর পিডিএফের গড় — কোনোটাই বদলায় না (v79)
+      var avg = days > 0 ? Math.round(avgMonthExpense(monthList) / days) : 0;
       els.avgDailyVal.textContent = fmtMoney(avg);
-      els.avgDailySub.textContent = monthLabel(ym) + ' · ' + bnInt(days) + ' দিন ধরে';
+      els.avgDailySub.textContent = monthLabel(ym) + ' · ' + bnInt(days) + ' দিন ধরে' +
+        (state.avgExclude.length ? ' · ' + bnInt(state.avgExclude.length) + 'টি ক্যাটাগরি বাদ' : '');
       els.budgetMonthLbl.textContent = monthLabel(ym);
+    }
+
+    /* ---------- গড় দৈনিক খরচ থেকে ক্যাটাগরি বাদ (v79) ----------
+       বাদ দেওয়া ক্যাটাগরি শুধু গড়ের অঙ্কেই ধরা হয় না — মাসের মোট,
+       আজ/সপ্তাহের মোট, ডেইলি খরচ, ক্যাটাগরি ভাগ, পিডিএফের গড় সব
+       আগের মতোই পুরো খরচে হিসাব হয়। */
+    var AVG_EXCLUDE_KEY = 'khorochpotro_avg_exclude';
+    function sanitizeAvgExclude(raw) {
+      var out = [];
+      if (!Array.isArray(raw)) return out;
+      raw.forEach(function (c) {
+        var cat = String(c || '');
+        if (EXPENSE_CATS.indexOf(cat) !== -1 && out.indexOf(cat) === -1) out.push(cat);
+      });
+      return out;
+    }
+    function avgExcludeEquals(a, b) {
+      a = sanitizeAvgExclude(a); b = sanitizeAvgExclude(b);
+      if (a.length !== b.length) return false;
+      var sa = a.slice().sort(), sb = b.slice().sort();
+      for (var i = 0; i < sa.length; i++) if (sa[i] !== sb[i]) return false;
+      return true;
+    }
+    // নির্বাচিত মাসের খরচের মধ্যে বাদ-না-দেওয়া ক্যাটাগরির মোট (পয়সায়)
+    function avgMonthExpense(monthList) {
+      var total = 0;
+      for (var i = 0; i < monthList.length; i++) {
+        var e = monthList[i];
+        if (e.type === 'expense' && state.avgExclude.indexOf(e.category) === -1) total += e.poisha;
+      }
+      return total;
+    }
+    function avgExcludeSummaryText() {
+      if (!state.avgExclude.length) return 'কোনো ক্যাটাগরি বাদ নেই — পুরো মাসের খরচের গড় দেখাচ্ছে।';
+      return bnInt(state.avgExclude.length) + 'টি ক্যাটাগরি বাদ আছে: ' + state.avgExclude.join(', ') + '।';
+    }
+    function renderAvgExcludeList() {
+      var ym = state.selectedMonth;
+      var monthList = filterBy(state.entries, function (e) { return monthOf(e.date) === ym; });
+      var byCat = {};
+      monthList.forEach(function (e) { if (e.type === 'expense') byCat[e.category] = (byCat[e.category] || 0) + e.poisha; });
+      var html = '';
+      EXPENSE_CATS.forEach(function (cat) {
+        var excluded = state.avgExclude.indexOf(cat) !== -1;
+        html += '<label class="avg-ex-row' + (excluded ? ' excluded' : '') + '">' +
+          '<input type="checkbox" data-avg-ex-cat="' + escapeHtml(cat) + '"' + (excluded ? ' checked' : '') + '>' +
+          '<span class="x-name"><span class="dot" style="background:' + catColor(cat) + '"></span>' + escapeHtml(cat) + '</span>' +
+          '<span class="x-amt">' + fmtMoney(byCat[cat] || 0) + '</span></label>';
+      });
+      els.avgExcludeList.innerHTML = html;
+      var days = elapsedDaysInMonth(ym);
+      var avg = days > 0 ? Math.round(avgMonthExpense(monthList) / days) : 0;
+      els.avgExcludeAvgVal.textContent = fmtMoney(avg);
+      els.avgExcludeSummary.textContent = avgExcludeSummaryText();
+    }
+    function setAvgExclude(next) {
+      var clean = sanitizeAvgExclude(next);
+      if (avgExcludeEquals(clean, state.avgExclude)) return;
+      state.avgExclude = clean;
+      renderSummary();
+      renderAvgExcludeList();
+      // বাজেট বদলের মতোই — স্থানীয় সংরক্ষণ + এনক্রিপ্টেড ব্যাকআপে পুশ
+      markChanged();
+    }
+    var avgExcludeModalTimer = null;
+    function openAvgExcludePanel() {
+      renderAvgExcludeList();
+      clearTimeout(avgExcludeModalTimer);
+      els.avgExcludeModal.hidden = false;
+      void els.avgExcludeModal.offsetWidth;
+      els.avgExcludeModal.classList.add('open');
+      navPush('avgExclude');
+      document.body.classList.add('modal-open');
+      els.avgExcludeClose.focus();
+    }
+    function closeAvgExcludePanel(fromNav) {
+      if (els.avgExcludeModal.hidden) return;
+      if (!fromNav) navRelease('avgExclude');
+      els.avgExcludeModal.classList.remove('open');
+      clearTimeout(avgExcludeModalTimer);
+      avgExcludeModalTimer = setTimeout(function () {
+        els.avgExcludeModal.hidden = true;
+        document.body.classList.remove('modal-open');
+      }, 350);
     }
 
     /* ---------- পাই চার্টের হাইলাইট অবস্থা ----------
@@ -3255,6 +3377,7 @@
       if (navSuppress > 0) { navSuppress--; return; }
       var layer = navStack.pop();
       if (layer === 'preview') closePeriodPreview(true);
+      else if (layer === 'avgExclude') closeAvgExcludePanel(true);
       else if (layer === 'dd') closeDropdown(true);
     });
 
@@ -4916,6 +5039,21 @@
     els.statWeek.addEventListener('click', function () { openPeriodPreview('week'); });
     els.statMonth.addEventListener('click', function () { openPeriodPreview('month'); });
     els.periodModalClose.addEventListener('click', function () { closePeriodPreview(); });
+    // গড় বাক্সে চাপ দিলে বাদ-ক্যাটাগরির প্যানেল — বদল সঙ্গে সঙ্গে গড়ে বসে
+    els.statAvg.addEventListener('click', function () { openAvgExcludePanel(); });
+    els.avgExcludeClose.addEventListener('click', function () { closeAvgExcludePanel(); });
+    els.avgExcludeModal.addEventListener('click', function (ev) { if (ev.target === els.avgExcludeModal) closeAvgExcludePanel(); });
+    els.avgExcludeList.addEventListener('change', function (ev) {
+      var cb = ev.target;
+      if (!cb || !cb.getAttribute || !cb.getAttribute('data-avg-ex-cat')) return;
+      var cat = cb.getAttribute('data-avg-ex-cat');
+      var next = state.avgExclude.slice();
+      var i = next.indexOf(cat);
+      if (cb.checked && i === -1) next.push(cat);
+      if (!cb.checked && i !== -1) next.splice(i, 1);
+      setAvgExclude(next);
+    });
+    els.avgExcludeClearBtn.addEventListener('click', function () { setAvgExclude([]); });
     /* পাই চার্টের ইন্টারঅ্যাকশন: অংশে চাপ দিলে হাইলাইট আটকে থাকে (আবার
        একই অংশে চাপ দিলে বা মাঝখানে/বাইরে চাপ দিলে ছাড়ে); আঙুল বা মাউস
        টেনে ঘোরালে যেই অংশের ওপর পড়ে সেটাই হাইলাইট হয়। মাউসের শুধু
@@ -4963,6 +5101,7 @@
     els.periodModal.addEventListener('click', function (ev) { if (ev.target === els.periodModal) closePeriodPreview(); });
     document.addEventListener('keydown', function (ev) {
       if (ev.key === 'Escape' && !els.periodModal.hidden) closePeriodPreview();
+      if (ev.key === 'Escape' && els.avgExcludeModal && !els.avgExcludeModal.hidden) closeAvgExcludePanel();
     });
     els.pdfBtn.addEventListener('click', generateMonthlyPdf);
     /* ---------- পিডিএফ বোতামের জায়গা: পর্দা অনুযায়ী ----------
@@ -5380,7 +5519,9 @@
           if (/^\d{4}-(0[1-9]|1[0-2])$/.test(k) && isFinite(v) && v > 0 && v <= 99999999999) budgets[k] = v;
         });
       }
-      return { entries: out, budgets: budgets, nextId: maxId + 1 };
+      // গড় থেকে বাদ দেওয়া ক্যাটাগরি — শুধু ৯ খরচের ক্যাটাগরিই বৈধ, বাকি বাদ
+      var avgExclude = sanitizeAvgExclude(data.avgExclude);
+      return { entries: out, budgets: budgets, avgExclude: avgExclude, nextId: maxId + 1 };
     }
 
     /* ============================================================
@@ -5402,6 +5543,7 @@
       baseUpdatedAt: null,  // যে ব্যাকআপ থেকে এই হিসাব এসেছে, তার সময়
       baseIds: [],          // ওই ব্যাকআপের এন্ট্রিগুলোর id
       baseBudgets: {},      // ওই ব্যাকআপের বাজেট
+      baseAvgExclude: [],   // ওই ব্যাকআপের গড়-থেকে-বাদ ক্যাটাগরি (v79)
       baseEntries: {}       // ওই ব্যাকআপের এন্ট্রিগুলোর অনুলিপি (id -> এন্ট্রি) —
                             // অন্য ডিভাইসে মোছা এন্ট্রি চেনার জন্য লাগে
     };
@@ -5409,8 +5551,11 @@
     function saveLocal() {
       try {
         localStorage.setItem(LOCAL_KEY, JSON.stringify({
-          entries: state.entries, budgets: state.budgets, nextId: state.nextId, meta: syncMeta
+          entries: state.entries, budgets: state.budgets, avgExclude: state.avgExclude, nextId: state.nextId, meta: syncMeta
         }));
+        // আলাদা পরিষ্কার চাবিতেও — পুরনো সংরক্ষণ/ব্যাকআপে avgExclude
+        // না থাকলেও বাছাইটা যেন হারিয়ে না যায় (v79)
+        localStorage.setItem(AVG_EXCLUDE_KEY, JSON.stringify(state.avgExclude));
       } catch (e) {}
     }
     function loadLocal() {
@@ -5419,10 +5564,15 @@
       if (!raw) return;
       try {
         var d = JSON.parse(raw);
-        var clean = sanitizeBackup({ entries: d.entries, budgets: d.budgets });
+        var clean = sanitizeBackup({ entries: d.entries, budgets: d.budgets, avgExclude: d.avgExclude });
         if (!clean) return;
         state.entries = clean.entries;
         state.budgets = clean.budgets;
+        // সংরক্ষিত বাছাই — না থাকলে (পুরনো সংরক্ষণ) আলাদা চাবি থেকে
+        state.avgExclude = Array.isArray(d.avgExclude) ? clean.avgExclude : sanitizeAvgExclude(readAvgExcludeFallback());
+        function readAvgExcludeFallback() {
+          try { return JSON.parse(localStorage.getItem(AVG_EXCLUDE_KEY) || '[]'); } catch (e) { return []; }
+        }
         state.nextId = Math.max(clean.nextId, Math.round(+d.nextId) || 0);
         if (d.meta && typeof d.meta === 'object') {
           syncMeta.updatedAt = d.meta.updatedAt || null;
@@ -5431,6 +5581,7 @@
           syncMeta.baseUpdatedAt = d.meta.baseUpdatedAt || null;
           syncMeta.baseIds = Array.isArray(d.meta.baseIds) ? d.meta.baseIds : [];
           syncMeta.baseBudgets = (d.meta.baseBudgets && typeof d.meta.baseBudgets === 'object') ? d.meta.baseBudgets : {};
+          syncMeta.baseAvgExclude = sanitizeAvgExclude(d.meta.baseAvgExclude);
           syncMeta.baseEntries = (d.meta.baseEntries && typeof d.meta.baseEntries === 'object') ? d.meta.baseEntries : {};
         }
       } catch (e) {}
@@ -5544,6 +5695,7 @@
       syncMeta.baseUpdatedAt = stamp;
       syncMeta.baseIds = state.entries.map(function (e) { return e.id; });
       syncMeta.baseBudgets = JSON.parse(JSON.stringify(state.budgets));
+      syncMeta.baseAvgExclude = state.avgExclude.slice();
       syncMeta.baseEntries = entrySnapshotMap(state.entries);
     }
     // দূরের ব্যাকআপের বিষয়বস্তু base-এর অনুলিপির সঙ্গে হুবহু এক
@@ -5563,6 +5715,8 @@
       for (var j = 0; j < ck.length; j++) {
         if (syncMeta.baseBudgets[ck[j]] !== clean.budgets[ck[j]]) return false;
       }
+      // শুধু বাদ-ক্যাটাগরি বদলালেও ব্যাকআপটা base-এর মতো নয় — মেলাতে হবে
+      if (!avgExcludeEquals(syncMeta.baseAvgExclude, clean.avgExclude)) return false;
       return true;
     }
     // অন্য ডিভাইসের ব্যাকআপের সঙ্গে স্থানীয় হিসাব মেলানো:
@@ -5672,6 +5826,16 @@
           delete state.budgets[k]; changed = true;
         }
       });
+      // গড়-থেকে-বাদ ক্যাটাগরি — বাজেটের মতোই: এখানে base থেকে বদলানো
+      // না হলে দূরের বাছাইটাই বসে; দূরে মুছে গেলে আর এখানে base-এর
+      // মতোই থাকলে এখান থেকেও মুছে যায়। পুরনো ব্যাকআপে (avgExclude
+      // চাবি নেই) কিছুই বদলায় না — স্থানীয় বাছাই অক্ষত থাকে।
+      if (remote.data && 'avgExclude' in remote.data) {
+        var localAvgChanged = !avgExcludeEquals(state.avgExclude, syncMeta.baseAvgExclude);
+        if (!localAvgChanged && !avgExcludeEquals(state.avgExclude, clean.avgExclude)) {
+          state.avgExclude = clean.avgExclude.slice(); changed = true;
+        }
+      }
       // ব্যাকআপের লার্নিংও মেলানো হয় — অন্য ডিভাইসে শেখা
       // সংশোধন এখানে আসে, এখানকার নতুন শেখা হারায় না।
       if (mergeLearningFromBackup(remote.data && remote.data.learning)) changed = true;
@@ -5679,6 +5843,7 @@
       // base এখন ব্যাকআপের এন্ট্রি তালিকাই
       syncMeta.baseIds = clean.entries.map(function (e) { return e.id; });
       syncMeta.baseBudgets = clean.budgets;
+      syncMeta.baseAvgExclude = clean.avgExclude.slice();
       syncMeta.baseEntries = entrySnapshotMap(clean.entries);
       if (changed) {
         syncMeta.updatedAt = new Date().toISOString();
@@ -5696,6 +5861,7 @@
       if (!clean) return;
       state.entries = clean.entries;
       state.budgets = clean.budgets;
+      state.avgExclude = clean.avgExclude.slice();
       state.nextId = clean.nextId;
       // ব্যাকআপের লার্নিংও ফেরানো হয় — নতুন ডিভাইসে হিসাবের
       // সঙ্গে শেখা সংশোধনগুলোও ফিরে আসে।
@@ -5703,6 +5869,7 @@
       syncMeta.baseUpdatedAt = remote.updatedAt || null;
       syncMeta.baseIds = clean.entries.map(function (e) { return e.id; });
       syncMeta.baseBudgets = clean.budgets;
+      syncMeta.baseAvgExclude = clean.avgExclude.slice();
       syncMeta.baseEntries = entrySnapshotMap(clean.entries);
       syncMeta.updatedAt = remote.updatedAt || new Date().toISOString();
       syncMeta.pendingSync = false;
@@ -5719,7 +5886,7 @@
     }
     function pushBackup(sha, isRetry) {
       var stamp = syncMeta.updatedAt || new Date().toISOString();
-      var inner = { entries: state.entries, budgets: state.budgets, updatedAt: stamp, learning: learnSnapshot() };
+      var inner = { entries: state.entries, budgets: state.budgets, avgExclude: state.avgExclude, updatedAt: stamp, learning: learnSnapshot() };
       return encryptBackupData(inner).then(function (enc) {
         var wrapper = {
           app: 'khorochpotro', version: 2, encrypted: true, updatedAt: stamp,
