@@ -437,7 +437,7 @@
       .voice-status { font-weight: 600; font-size: 16px; min-height: 26px; }
       .voice-live {
         display: none; text-align: left; background: var(--surface-2); border-radius: var(--radius-sm);
-        padding: 12px 14px; font-size: 15.5px; margin-top: 10px; word-break: break-word;
+        padding: 12px 14px; font-size: 15.5px; margin-top: 10px; word-break: break-word; min-height: 64px;
       }
       .voice-live.show { display: block; }
       .voice-live .v-lbl { font-size: 12.5px; font-weight: 700; color: var(--ink-3); display: block; margin-bottom: 2px; }
@@ -1185,7 +1185,45 @@
         header.top .today-line { margin: 0; }
       }
 
-    </style>
+    
+      /* ================= নতুন লেআউট + ভয়েস পপআপ ================= */
+      .grid.single-col { display: block; }
+      .grid.single-col > section { margin-bottom: 14px; }
+      .grid.single-col > section:last-child { margin-bottom: 0; }
+      .parser-model-panel .model-box { margin-top: 0; }
+      /* গ্রিডের বাইরের ব্লকগুলোতেও (পিডিএফ স্লট, পার্সার মডেল)
+         নিচে 14px ফাঁক — নইলে পিডিএফ বোতাম আর পার্সার মডেল কার্ড
+         গায়ে লেগে থাকে। গ্রিডের ভেতরের সেকশনের ফাঁকের সঙ্গেই মেলে। */
+      .pdf-slot { margin-bottom: 14px; }
+      .parser-model-panel { margin-bottom: 14px; }
+      /* FAB সব পর্দায় দেখা যাবে (আগে শুধু ডেস্কটপে ছিল) */
+      .fab { display: flex !important; transition: transform .16s ease, background-color .35s ease, color .35s ease, opacity .18s ease; }
+      .fab.voice-pop-hidden { opacity: 0; transform: scale(.55); pointer-events: none; }
+      /* ভয়েস পপআপ: FAB-এর গোল কোণা থেকে মরফ করে বড় বাক্স হয় */
+      .voice-pop-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(10, 20, 16, 0); transition: background-color .3s ease; }
+      .voice-pop-overlay.open { background: rgba(10, 20, 16, .45); }
+      .voice-pop { position: absolute; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); width: min(360px, calc(100vw - 48px)); max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); border-radius: 22px; padding: 20px; box-shadow: var(--shadow-lg); scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; transform-origin: calc(100% - 32px) calc(100% - 32px); transform: translateY(20px) scale(.06); opacity: 0; pointer-events: none; transition: transform .45s cubic-bezier(.22, 1, .36, 1), opacity .45s ease, border-radius .45s ease; }
+      .voice-pop-overlay.open .voice-pop { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
+      .voice-pop .vp-inner { opacity: 0; transform: translateY(8px); transition: opacity .22s ease .14s, transform .22s ease .14s; text-align: center; position: relative; }
+      .voice-pop-overlay.open .vp-inner { opacity: 1; transform: none; }
+      .voice-pop-overlay:not(.open) .vp-inner { transition-delay: 0s; }
+      .voice-pop-close { position: absolute; top: 0; right: 0; }
+      .voice-pop-title { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0 0; }
+      .voice-pop-title svg { width: 22px; height: 22px; }
+      .voice-pop .mic-btn { margin: 12px auto 6px; }
+      .voice-pop .voice-status { margin-bottom: 14px; }
+      .voice-pop .voice-detected, .voice-pop .voice-live { text-align: left; }
+      /* ভয়েস স্লট — মাইক বোতামের নিচের জায়গাটা সবসময় একই উচ্চতায়
+         থাকে। "মাইক একবার চালু করে নিন" বোতাম আর লাইভ বাক্স একই
+         স্লটে বদলায় — একটা দেখা গেলে আরেকটা লুকায়, কিন্তু স্লটের
+         উচ্চতা (74px) বদলায় না। তাই শোনা চালু/বন্ধ করলে পপআপের
+         উচ্চতা বদলায় না, মাইক বোতাম এক জায়গায় স্থির থাকে। */
+      .voice-pop .voice-slot { min-height: 74px; display: flow-root; }
+      .voice-pop::-webkit-scrollbar { width: 6px; }
+      .voice-pop::-webkit-scrollbar-track { background: transparent; }
+      .voice-pop::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+      @media (prefers-reduced-motion: reduce) { .voice-pop, .voice-pop .vp-inner, .fab { transition: none !important; } }
+</style>
   </head>
   <body>
     <div class="wrap">
@@ -1249,38 +1287,33 @@
         </button>
       </section>
 
-      <div class="grid">
-        <!-- Left column -->
-        <div class="stack">
-          <!-- Voice -->
-          <section class="card panel voice-panel" aria-label="কণ্ঠ দিয়ে এন্ট্রি">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-              ভয়েস টাইপিং
-            </h2>
-            <button class="mic-btn" id="micBtn" type="button" aria-label="কণ্ঠ দিয়ে এন্ট্রি শুরু করুন">
-              <span class="ico-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
-              <span class="ico-sync" id="micSyncIcon" aria-hidden="true"></span>
-            </button>
-            <div class="voice-status" id="voiceStatus">শুরু করতে মাইক বোতামে চাপ দিন</div>
-            <div class="voice-notice" id="voiceNotice" style="display:none" role="note"></div>
-            <button class="btn btn-tonal" id="micEnableBtn" type="button" style="display:none">মাইক একবার চালু করে নিন</button>
-            <div class="voice-live" id="voiceLive"><span class="v-lbl">আপনি বলছেন</span><span id="voiceLiveText"></span></div>
-            <div class="voice-detected" id="voiceDetected"></div>
-            <div class="model-box" id="parserModelBox">
-              <div class="model-update">
-                <div class="model-update-head">
-                  <strong>পার্সার মডেল</strong>
-                  <span class="model-ver" id="parserModelVersion"></span>
-                </div>
-                <p class="model-text" id="parserModelStatus"></p>
-                <button class="btn btn-outline btn-sm" id="parserModelBtn" type="button">মডেল আপডেট</button>
+      <div class="grid single-col">
+        <!-- এক কলাম লেআউট: বাজেট → ম্যানুয়াল → হিস্টোরি -->
+<section class="card panel budget-panel" id="budgetPanel" aria-label="মাসিক বাজেট">
+            <div class="budget-head">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+                মাসিক বাজেট
+              </h2>
+              <button class="btn btn-tonal btn-sm" type="button" id="budgetMinToggle" hidden style="display:none" aria-expanded="true">minimize করুন</button>
+            </div>
+            <div class="budget-body" id="budgetSettingsBody"><div class="budget-body-inner">
+            <p class="hint" id="budgetMonthLbl">নির্বাচিত মাসের জন্য বাজেট ঠিক করুন।</p>
+            <div class="budget-row">
+              <input id="budgetInput" type="text" inputmode="decimal" placeholder="যেমন: ২০০০০" autocomplete="off" />
+              <button class="btn btn-tonal" type="button" id="budgetSaveBtn">ঠিক করুন</button>
+            </div>
+            <p class="hint" id="budgetEmpty" style="margin:12px 0 0">বাজেট ঠিক করা হয়নি।</p>
+            </div></div>
+            <div id="budgetView" style="display:none">
+              <div class="progress"><div id="budgetBar"></div></div>
+              <div class="budget-meta">
+                <span>খরচ হয়েছে <strong id="budgetSpent">৳ ০</strong> / <strong id="budgetTotal">৳ ০</strong></span>
+                <span id="budgetRemain"></span>
               </div>
             </div>
           </section>
-
-          <!-- Manual form -->
-          <section class="card panel" id="entryFormPanel" aria-label="হাতে এন্ট্রি">
+<section class="card panel" id="entryFormPanel" aria-label="হাতে এন্ট্রি">
             <h2>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
               <span id="formTitle">ম্যানুয়াল এন্ট্রি</span>
@@ -1318,39 +1351,7 @@
               </div>
             </form>
           </section>
-
-          <!-- Budget -->
-          <section class="card panel budget-panel" id="budgetPanel" aria-label="মাসিক বাজেট">
-            <div class="budget-head">
-              <h2>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
-                মাসিক বাজেট
-              </h2>
-              <button class="btn btn-tonal btn-sm" type="button" id="budgetMinToggle" hidden style="display:none" aria-expanded="true">minimize করুন</button>
-            </div>
-            <div class="budget-body" id="budgetSettingsBody"><div class="budget-body-inner">
-            <p class="hint" id="budgetMonthLbl">নির্বাচিত মাসের জন্য বাজেট ঠিক করুন।</p>
-            <div class="budget-row">
-              <input id="budgetInput" type="text" inputmode="decimal" placeholder="যেমন: ২০০০০" autocomplete="off" />
-              <button class="btn btn-tonal" type="button" id="budgetSaveBtn">ঠিক করুন</button>
-            </div>
-            <p class="hint" id="budgetEmpty" style="margin:12px 0 0">বাজেট ঠিক করা হয়নি।</p>
-            </div></div>
-            <div id="budgetView" style="display:none">
-              <div class="progress"><div id="budgetBar"></div></div>
-              <div class="budget-meta">
-                <span>খরচ হয়েছে <strong id="budgetSpent">৳ ০</strong> / <strong id="budgetTotal">৳ ০</strong></span>
-                <span id="budgetRemain"></span>
-              </div>
-            </div>
-          </section>
-
-        </div>
-
-        <!-- Right column -->
-        <div class="stack">
-          <!-- History -->
-          <section class="card panel history-panel" aria-label="ট্রানজেকশন হিস্টোরি">
+<section class="card panel history-panel" aria-label="ট্রানজেকশন হিস্টোরি">
             <h2 id="historyTitle">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
               <span id="historyTitleText">ট্রানজেকশন হিস্টোরি</span>
@@ -1416,7 +1417,6 @@
               <div id="dailyRows" role="list" aria-label="প্রতিদিনের মোট খরচ"></div>
             </div>
           </section>
-        </div>
       </div>
 
       <!-- মাসিক পিডিএফ বোতাম: মোবাইলে এখানে — গিটহাব ব্যাকআপের
@@ -1430,7 +1430,20 @@
       </div>
 
       <!-- GitHub backup — কমপ্যাক্ট: শুধু ইনপুট, সংরক্ষণ আর এক লাইনের অবস্থা -->
-      <section class="card panel backup-panel" id="backupPanel" aria-label="গিটহাব ব্যাকআপ">
+            <section class="parser-model-panel" aria-label="পার্সার মডেল">
+<div class="model-box" id="parserModelBox">
+              <div class="model-update">
+                <div class="model-update-head">
+                  <strong>পার্সার মডেল</strong>
+                  <span class="model-ver" id="parserModelVersion"></span>
+                </div>
+                <p class="model-text" id="parserModelStatus"></p>
+                <button class="btn btn-outline btn-sm" id="parserModelBtn" type="button">মডেল আপডেট</button>
+              </div>
+            </div>
+      </section>
+
+<section class="card panel backup-panel" id="backupPanel" aria-label="গিটহাব ব্যাকআপ">
         <div class="backup-head">
           <h2>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
@@ -1487,7 +1500,31 @@
       <span class="visually-hidden" id="fabSyncText" role="status" aria-live="polite"></span>
     </button>
 
-    <div class="modal-overlay" id="periodModal" hidden>
+    
+    <!-- ভয়েস পপআপ — FAB থেকে মরফ করে খোলে -->
+    <div class="voice-pop-overlay" id="voicePopOverlay" hidden>
+      <div class="voice-pop" id="voicePop" role="dialog" aria-modal="true" aria-label="ভয়েস টাইপিং">
+        <div class="vp-inner">
+          <button class="icon-btn voice-pop-close" id="voicePopClose" type="button" aria-label="বন্ধ করুন">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <h2 class="voice-pop-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              ভয়েস টাইপিং</h2>
+<button class="mic-btn" id="micBtn" type="button" aria-label="কণ্ঠ দিয়ে এন্ট্রি শুরু করুন">
+              <span class="ico-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+              <span class="ico-sync" id="micSyncIcon" aria-hidden="true"></span>
+            </button>
+            <div class="voice-status" id="voiceStatus">শুরু করতে মাইক বোতামে চাপ দিন</div>
+            <div class="voice-notice" id="voiceNotice" style="display:none" role="note"></div>
+            <div class="voice-slot">
+              <button class="btn btn-tonal" id="micEnableBtn" type="button" style="display:none">মাইক একবার চালু করে নিন</button>
+              <div class="voice-live" id="voiceLive"><span class="v-lbl">আপনি বলছেন</span><span id="voiceLiveText"></span></div>
+            </div>
+            <div class="voice-detected" id="voiceDetected"></div>
+        </div>
+      </div>
+    </div>
+<div class="modal-overlay" id="periodModal" hidden>
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="periodModalTitle">
         <div class="modal-head">
           <div>
@@ -3378,6 +3415,7 @@
       var layer = navStack.pop();
       if (layer === 'preview') closePeriodPreview(true);
       else if (layer === 'avgExclude') closeAvgExcludePanel(true);
+      else if (layer === 'voicePop') closeVoicePop(true);
       else if (layer === 'dd') closeDropdown(true);
     });
 
@@ -3962,6 +4000,9 @@
       els.voiceStatus.textContent = on ? 'শুনছি… বলুন' : defaultVoiceStatus();
       if (on) { els.voiceLive.classList.add('show'); els.voiceLiveText.textContent = ''; els.voiceDetected.className = 'voice-detected'; }
       else { els.voiceLive.classList.remove('show'); }
+      /* শোনা চলাকালে "মাইক একবার চালু করে নিন" বোতামটা লুকিয়ে রাখা
+         হয় — নইলে শোনা চলছে আর বোতামটাও দেখা যায় (বিরোধী অবস্থা)। */
+      updateVoiceNotice();
     }
     /* ---------- মাইকের অনুমতি: অবস্থা যাচাই, একবারের চালু করা ----------
        ব্রাউজার অনুমতিটা ঠিকানা (origin) অনুযায়ী মনে রাখে। অনলাইন লিংক
@@ -3984,7 +4025,7 @@
       } else if (micPermState === 'denied') {
         show = true;
         html = '<strong>মাইকের অনুমতি বন্ধ আছে।</strong> ব্রাউজারের তালা/সেটিংস চিহ্ন → মাইক্রোফোন → “অনুমতি দিন” → পাতা আবার খুলুন।';
-      } else if (micPermState === 'prompt' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      } else if (micPermState === 'prompt' && !isListening && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         els.micEnableBtn.style.display = 'inline-flex';
       }
       els.voiceNotice.style.display = show ? 'block' : 'none';
@@ -4160,7 +4201,8 @@
         box.innerHTML = '';
         startVoice();
       });
-      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      /* scrollIntoView সরানো — প্রিভিউটা পপআপের ভেতরেই থাকে; স্ক্রল
+         করলে পপআপের কনটেন্ট সরে মাইক বোতাম নড়ে যেত (গ্লিচ)। */
     }
     /* ---------- প্রিভিউয়ের ভেতরেই ঠিক করা ----------
        ভয়েস ভুল শুনলে (পরিমাণ, জমা/খরচ, ক্যাটাগরি, বিবরণ) ব্যবহারকারী
@@ -4357,8 +4399,10 @@
       if (!micSecure) {
         // ফাইল থেকে খোলা পাতায় ব্রাউজার মাইক দেবেই না — বৃথা চেষ্টা না করে
         // কারণ ও সমাধানটাই দেখিয়ে দেওয়া হয়।
+        // নোটিশটা পপআপের ভেতরেই মাইকের ঠিক নিচে থাকে, তাই
+        // scrollIntoView দরকার নেই — ওটা দিলে পপআপের কনটেন্ট লাফিয়ে
+        // উঠত (মাইক চাপলেই গ্লিচ)। শুধু নোটিশ দেখানোই যথেষ্ট।
         updateVoiceNotice();
-        els.voiceNotice.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       if (isListening) { stopCurrentListening(); return; }
@@ -4401,12 +4445,15 @@
     }
     els.micBtn.addEventListener('click', function () {
       if (!syncFaceTap()) return;
+      /* FAB থেকে আসা অটো-স্টার্ট টাইমার থাকলে বাতিল — হাতে
+         চাপ দেওয়ার পর টাইমার আবার startVoice() ডাকলে শোনা বন্ধ
+         হয়ে যেত (ডাবল-ট্রিগার গ্লিচ)। */
+      if (window.cancelVoiceAutoStart) window.cancelVoiceAutoStart();
       startVoice();
     });
     els.fabBtn.addEventListener('click', function () {
       if (!syncFaceTap()) return;
-      startVoice();
-      document.querySelector('.voice-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      openVoicePop(); // FAB চাপলে ভয়েস পপআপ মরফ করে খোলে
     });
 
     /* ---------- সিড বাক্য (ভয়েস লার্নিংয়ের টেমপ্লেট) ---------- */
@@ -6260,5 +6307,68 @@
       });
     }
     </script>
-  </body>
+  
+    <script>
+    /* ================= ভয়েস পপআপ স্ক্রিপ্ট ================= */
+    (function () {
+      'use strict';
+      var overlay = document.getElementById('voicePopOverlay');
+      var pop = document.getElementById('voicePop');
+      var fab = document.getElementById('fabBtn');
+      var closeBtn = document.getElementById('voicePopClose');
+      var closeTimer = null;
+      var voicePopOpen = false;
+      /* FAB চাপলে পপআপ খোলার সঙ্গে সঙ্গে শোনাও শুরু হবে — এক ক্লিকেই
+         দুটো কাজ। মরফ শেষ হলে (400ms) শোনা শুরু হয়, যাতে মাইক চালু
+         হওয়ার ভিজ্যুয়াল (লাইভ বাক্স, লাল মাইক) মরফের মাঝখানে এসে
+         লাফ না দেয়। পপআপ বন্ধ হলে বা মাইক বোতামে হাতে চাপ পড়লে
+         এই টাইমার বাতিল হয় — দুবার চালু হওয়ার গ্লিচ হবে না। */
+      var voiceAutoStartTimer = null;
+      function cancelVoiceAutoStart() {
+        if (voiceAutoStartTimer) { clearTimeout(voiceAutoStartTimer); voiceAutoStartTimer = null; }
+      }
+      window.cancelVoiceAutoStart = cancelVoiceAutoStart;
+      function openVoicePop() {
+        if (voicePopOpen) return;
+        voicePopOpen = true;
+        clearTimeout(closeTimer);
+        overlay.hidden = false;
+        void pop.offsetWidth;
+        overlay.classList.add('open');
+        fab.classList.add('voice-pop-hidden');
+        navPush('voicePop');
+        document.body.classList.add('modal-open');
+        /* এক ক্লিকেই শোনা শুরু: মরফ শেষ হলে startVoice() ডাকা হয়।
+           voicePopOpen আর isListening যাচাই করা হয়, যাতে বন্ধ পপআপে
+           বা ইতিমধ্যে শুনতে থাকা অবস্থায় আবার চালু না হয়। */
+        cancelVoiceAutoStart();
+        voiceAutoStartTimer = setTimeout(function () {
+          voiceAutoStartTimer = null;
+          if (voicePopOpen && !window.isListening) { try { startVoice(); } catch (e) {} }
+        }, 400);
+      }
+      function closeVoicePop(fromNav) {
+        if (!voicePopOpen) return;
+        voicePopOpen = false;
+        cancelVoiceAutoStart();
+        if (!fromNav) navRelease('voicePop');
+        overlay.classList.remove('open');
+        fab.classList.remove('voice-pop-hidden');
+        try { if (window.isListening) stopCurrentListening(); } catch (e) {}
+        clearTimeout(closeTimer);
+        closeTimer = setTimeout(function () {
+          overlay.hidden = true;
+          document.body.classList.remove('modal-open');
+        }, 480);
+      }
+      window.openVoicePop = openVoicePop;
+      window.closeVoicePop = closeVoicePop;
+      closeBtn.addEventListener('click', function () { closeVoicePop(); });
+      overlay.addEventListener('click', function (ev) { if (ev.target === overlay) closeVoicePop(); });
+      document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape' && !overlay.hidden) closeVoicePop();
+      });
+    })();
+    </script>
+</body>
 </html>
