@@ -4253,9 +4253,14 @@
         var p = pendingVoice;
         pendingVoice = null;
         var e = addEntry({ type: p.type, poisha: p.poisha, category: p.category, desc: p.desc, date: p.date || todayStr() });
-        box.className = 'voice-detected show ok';
-        box.innerHTML = 'যোগ হয়েছে — <strong>' + (p.type === 'income' ? 'জমা' : 'খরচ') + ': ' + fmtMoney(p.poisha) + '</strong> · ক্যাটাগরি: <strong>' + escapeHtml(p.category) + '</strong><br/><span>“' + escapeHtml(p.raw) + '”</span>';
         showToast((p.type === 'income' ? 'জমা' : 'খরচ') + ' যোগ হয়েছে: ' + fmtMoney(p.poisha), 'বাতিল করুন', function () { removeEntry(e.id); });
+        /* অ্যাড করলেই পপআপ সঙ্গে সঙ্গে বন্ধ — টোস্টটা মূল পেজে
+           পরিষ্কার দেখা যায়, পপআপের সঙ্গে ওভারল্যাপ হয় না।
+           প্রিভিউ বক্সটাও খালি করে দেওয়া হয়, যাতে পরের বার
+           খুললে পুরোনো “যোগ হয়েছে” লেখাটা না ভাসে। */
+        box.className = 'voice-detected';
+        box.innerHTML = '';
+        if (window.closeVoicePop) window.closeVoicePop();
       });
       againBtn.addEventListener('click', function () {
         pendingVoice = null;
