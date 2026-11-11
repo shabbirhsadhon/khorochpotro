@@ -1133,29 +1133,22 @@
         .grid > .stack:last-child { grid-template-rows: minmax(0, 1fr); }
       }
 
-      /* তিন কলাম (≥1248px): দুই স্ট্যাকের মোড়ক সরিয়ে (display: contents)
-         প্যানেলগুলো সরাসরি গ্রিডে বসে — বামে কণ্ঠের প্যানেল,
-         মাঝে ইতিহাস, ডানে হাতে-এন্ট্রির ফর্ম আর তার নিচে বাজেট।
-         নিচের ফর্ম আর বাজেট ওপরে উঠে আসায় ডানদিকের বড়
-         ফাঁকা জায়গাটা ভরে যায়, পেজের উচ্চতাও কমে আসে */
+      /* তিন কলাম (≥1248px): বামে পার্সার মডেল (ওপরে) + গিটহাব ব্যাকআপ
+         (নিচে), মাঝে ইতিহাস (দুই সারি জুড়ে), ডানে হাতে-এন্ট্রির ফর্ম
+         (ওপরে) + মাসিক বাজেট (নিচে)। ভয়েস টাইপিং পেজের প্রবাহে নেই —
+         শুধু FAB পপআপে থাকে। DOM এক কলামের ক্রমেই থাকে; শুধু
+         grid-area দিয়ে সাজানো হয়। নিচের v81 ওভাররাইড ব্লকটাই
+         আসল কার্যকর নিয়ম (single-col-এর display:block-কে হারায়)। */
       @media (min-width: 1248px) {
         .grid {
           grid-template-columns: 400px minmax(0, 1fr) 380px;
           grid-template-areas:
-            "voice history form"
-            "voice history budget";
+            "model history form"
+            "backup history budget";
           align-items: stretch;
         }
-        .grid > .stack { display: contents; }
-        .voice-panel { grid-area: voice; }
-        /* উদাহরণ অংশ সরানোর পর ভয়েস কার্ডটা গ্রিডের পুরো উচ্চতায়
-           টানা থাকে — ভেতরের বাড়তি জায়গাটা যাতে নিচে জমে বাজে ফাঁক
-           না দেখায়, কার্ডটা ফ্লেক্স কলাম: মডেল বাক্সটা নিচে ঠেকে
-           থাকে, বাকি কনটেন্ট ওপরে আগের মতোই সাজানো */
-        .voice-panel { display: flex; flex-direction: column; }
-        .voice-panel > button { align-self: center; }
-        .voice-panel .voice-status { margin-bottom: 14px; }
-        .voice-panel .model-box { margin-top: auto; }
+        .parser-model-panel { grid-area: model; }
+        .backup-panel { grid-area: backup; }
         .history-panel { grid-area: history; }
         #entryFormPanel { grid-area: form; }
         .budget-panel { grid-area: budget; }
@@ -1219,10 +1212,44 @@
          উচ্চতা (74px) বদলায় না। তাই শোনা চালু/বন্ধ করলে পপআপের
          উচ্চতা বদলায় না, মাইক বোতাম এক জায়গায় স্থির থাকে। */
       .voice-pop .voice-slot { min-height: 74px; display: flow-root; }
+      /* ফল দেখানো অবস্থায় (সবুজ/হলুদ বাক্সটা দেখা গেলে) স্লটের 74px
+         রিজার্ভ গুটিয়ে নেওয়া হয় — নইলে হিন্ট (“মাইক বাটনে চাপ দিন”)
+         আর ফলের বাক্সের মাঝে বড় ফাঁকা জায়গা থাকে। শোনা চালু হলে
+         লাইভ বাক্সটা স্লটের ভেতরেই আসে (74px-এ ঠিক ধরে), তাই মাইক
+         বোতাম নড়ে না — মাইক-জাম্প ফিক্স অটুট থাকে। */
+      .voice-pop .voice-slot.collapsed { min-height: 0; }
+      .voice-pop .voice-slot.collapsed + .voice-detected { margin-top: 0; }
       .voice-pop::-webkit-scrollbar { width: 6px; }
       .voice-pop::-webkit-scrollbar-track { background: transparent; }
       .voice-pop::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
       @media (prefers-reduced-motion: reduce) { .voice-pop, .voice-pop .vp-inner, .fab { transition: none !important; } }
+      /* ================= v81: ডেস্কটপ (≥1248px) তিন কলাম =================
+         মোবাইলে (<1248px) ওপরের .grid.single-col নিয়মই থাকে (এক কলাম)।
+         ডেস্কটপে গ্রিড আবার চালু হয় — .grid.single-col-এর display:block
+         নিয়মটাকে এখানে হারিয়ে দেওয়া হয় (একই নির্দিষ্টতা, পরে থাকায়)।
+         বাম: পার্সার মডেল + গিটহাব ব্যাকআপ; মাঝ: হিস্টোরি (দুই সারি);
+         ডান: ম্যানুয়াল এন্ট্রি + মাসিক বাজেট। ছয়টি ব্লকই গ্রিডের
+         ভেতরে থাকে (মোড়কের বন্ধ-ট্যাগ ব্যাকআপের পরে)। পিডিএফ বোতাম ডেস্কটপে
+         হিস্টোরি কার্ডের ভেতরে থাকে (placePdfBtn), তাই খালি .pdf-slot
+         স্লটটা গ্রিডে ফাঁকা আইটেম হয়ে না থেকে লুকানো হয়। */
+      @media (min-width: 1248px) {
+        .grid.single-col {
+          display: grid;
+          grid-template-columns: 400px minmax(0, 1fr) 380px;
+          grid-template-areas:
+            "model history form"
+            "backup history budget";
+          gap: 14px;
+          align-items: stretch;
+        }
+        .grid.single-col > section { margin-bottom: 0; }
+        .grid.single-col > .pdf-slot { display: none; }
+        .parser-model-panel { grid-area: model; margin-bottom: 0; }
+        .backup-panel { grid-area: backup; }
+        .history-panel { grid-area: history; }
+        #entryFormPanel { grid-area: form; }
+        .budget-panel { grid-area: budget; }
+      }
 </style>
   </head>
   <body>
@@ -1417,7 +1444,6 @@
               <div id="dailyRows" role="list" aria-label="প্রতিদিনের মোট খরচ"></div>
             </div>
           </section>
-      </div>
 
       <!-- মাসিক পিডিএফ বোতাম: মোবাইলে এখানে — গিটহাব ব্যাকআপের
            ঠিক ওপরে; ডেস্কটপে (≥960px) স্ক্রিপ্ট বোতামটাকে
@@ -1488,6 +1514,7 @@
         </details>
         </div></div>
       </section>
+      </div>
 
       <footer class="page">
         Created by Shabbir Hossin Sadhon · <a href="https://github.com/shabbirhsadhon" target="_blank" rel="noopener">GitHub Profile</a>
@@ -1514,9 +1541,9 @@
               <span class="ico-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
               <span class="ico-sync" id="micSyncIcon" aria-hidden="true"></span>
             </button>
-            <div class="voice-status" id="voiceStatus">শুরু করতে মাইক বোতামে চাপ দিন</div>
+            <div class="voice-status" id="voiceStatus">শুরু করতে মাইক বাটনে চাপ দিন</div>
             <div class="voice-notice" id="voiceNotice" style="display:none" role="note"></div>
-            <div class="voice-slot">
+            <div class="voice-slot" id="voiceSlot">
               <button class="btn btn-tonal" id="micEnableBtn" type="button" style="display:none">মাইক একবার চালু করে নিন</button>
               <div class="voice-live" id="voiceLive"><span class="v-lbl">আপনি বলছেন</span><span id="voiceLiveText"></span></div>
             </div>
@@ -1754,7 +1781,7 @@
      'budgetRemain', 'budgetMonthLbl', 'budgetMinToggle', 'budgetPanel', 'budgetSettingsBody',
      'searchInput', 'periodFilter', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
      'shownExpense', 'csvBtn', 'importBtn', 'importFile', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
-     'voiceLiveText', 'voiceDetected', 'toast', 'voiceNotice', 'micEnableBtn',
+     'voiceLiveText', 'voiceDetected', 'toast', 'voiceNotice', 'micEnableBtn', 'voiceSlot',
      'fabSyncIcon', 'fabSyncText', 'micSyncIcon', 'restoreOverlay',
      'parserModelVersion', 'parserModelStatus', 'parserModelBtn',
      'ghTokenInput', 'ghTokenSaveBtn', 'ghTokenClearBtn', 'ghTokenStatus',
@@ -4003,6 +4030,7 @@
       /* শোনা চলাকালে "মাইক একবার চালু করে নিন" বোতামটা লুকিয়ে রাখা
          হয় — নইলে শোনা চলছে আর বোতামটাও দেখা যায় (বিরোধী অবস্থা)। */
       updateVoiceNotice();
+      refreshVoiceSlot();
     }
     /* ---------- মাইকের অনুমতি: অবস্থা যাচাই, একবারের চালু করা ----------
        ব্রাউজার অনুমতিটা ঠিকানা (origin) অনুযায়ী মনে রাখে। অনলাইন লিংক
@@ -4014,7 +4042,7 @@
     var micSecure = !!window.isSecureContext;
     function defaultVoiceStatus() {
       if (!micSecure) return 'ফাইল থেকে মাইক চলবে না — নিচে দেখুন';
-      return 'মাইক বোতামে চাপ দিন';
+      return 'মাইক বাটনে চাপ দিন';
     }
     function updateVoiceNotice() {
       var show = false, html = '';
@@ -4031,6 +4059,17 @@
       els.voiceNotice.style.display = show ? 'block' : 'none';
       if (show) els.voiceNotice.innerHTML = html;
       if (!isListening) els.voiceStatus.textContent = defaultVoiceStatus();
+    }
+    /* স্লট গোটানো — ফল দেখানো অবস্থায় (voice-detected-এ সবুজ/হলুদ
+       বাক্সটা দেখা গেলে) স্লটের 74px রিজার্ভ গুটিয়ে নেওয়া হয়, যাতে
+       হিন্ট (“মাইক বাটনে চাপ দিন”) আর ফলের বাক্সের মাঝে বড় ফাঁকা
+       জায়গা না থাকে। শোনা চালু হলে লাইভ বাক্সটা স্লটের ভেতরেই আসে
+       (74px-এ ঠিক ধরে), তাই এই গোটানো মাইক বোতামের জায়গা বদলায় না —
+       মাইক-জাম্প ফিক্স অটুট থাকে। ফল সরলেই (আবার শুনলে) স্লট আবার
+       74px রিজার্ভে ফেরে। */
+    function refreshVoiceSlot() {
+      var shown = els.voiceDetected && els.voiceDetected.classList.contains('show');
+      if (els.voiceSlot) els.voiceSlot.classList.toggle('collapsed', !!shown);
     }
     function refreshMicPermission() {
       if (!micSecure || !navigator.permissions || !navigator.permissions.query) { updateVoiceNotice(); return; }
@@ -4068,6 +4107,7 @@
       r.heard = heardText; // আসল শোনা লাইন — “ঠিক করুন”-এ শেখার জন্য লাগে
       if (correctedText) els.voiceLiveText.textContent = correctedText;
       els.voiceDetected.classList.add('show');
+      refreshVoiceSlot();
       if (r.poisha == null) {
         pendingVoice = null;
         els.voiceDetected.className = 'voice-detected show warn';
@@ -4394,6 +4434,7 @@
       els.voiceStatus.textContent = 'ভয়েসের জন্য ইন্টারনেট লাগবে — নেট চালু করে আবার চেষ্টা করুন।';
       els.voiceDetected.className = 'voice-detected show warn';
       els.voiceDetected.textContent = 'নেট নেই — ভয়েসের জন্য ইন্টারনেট লাগে। নেট চালু করে আবার মাইক চাপুন, অথবা নিচে হাতে লিখে এন্ট্রি যোগ করুন।';
+      refreshVoiceSlot();
     }
     function startVoice() {
       if (!micSecure) {
@@ -4413,6 +4454,7 @@
       if (SR) { startOnlineRecognition(SR); return; }
       els.voiceDetected.className = 'voice-detected show warn';
       els.voiceDetected.textContent = 'এই ব্রাউজারে ভয়েস চলবে না — ক্রোমে খুলুন, অথবা হাতে লিখুন।';
+      refreshVoiceSlot();
     }
     function startOnlineRecognition(SR) {
       recognition = new SR();
@@ -6335,6 +6377,7 @@
         overlay.hidden = false;
         void pop.offsetWidth;
         overlay.classList.add('open');
+        refreshVoiceSlot();
         fab.classList.add('voice-pop-hidden');
         navPush('voicePop');
         document.body.classList.add('modal-open');
