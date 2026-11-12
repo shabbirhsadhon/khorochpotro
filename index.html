@@ -1272,6 +1272,58 @@
         #entryFormPanel { grid-area: form; }
         .budget-panel { grid-area: budget; }
       }
+      /* ---------- v85 টেস্ট: আইকন ও মাইক্রো-অ্যানিমেশন ----------
+         প্লাগ আইকন (itshover plug-connected-icon-এর SVG, CSS অ্যানিমেশন),
+         স্ট্যাট আইকন, ব্যালান্স আইকন/ফ্ল্যাশ, ক্যাটাগরি আইকন,
+         হেডার আইকনের হোভার। সবই আগের ডিজাইন ভাষায় (stroke 2, round)। */
+      /* প্লাগ আইকন — গিটহাব ব্যাকআপের সংযোগ অবস্থা */
+      .plug-icon { width: 22px; height: 22px; flex: none; color: var(--ink-3); transition: color .3s ease; }
+      .plug-icon .plug-upper-part, .plug-icon .plug-lower-part { transition: transform .35s ease-out; }
+      .plug-icon .plug-lower-leg { transition: opacity .35s ease-out; }
+      .plug-icon.connected { color: var(--primary); }
+      .plug-icon.connected .plug-upper-part { transform: translate(-2px, 2px); }
+      .plug-icon.connected .plug-lower-part { transform: translate(2px, -2px); }
+      .plug-icon.connected .plug-lower-leg { opacity: 0; }
+      .plug-icon.syncing { color: var(--primary); }
+      @keyframes plugSyncUpper { from { transform: translate(0, 0); } to { transform: translate(-2px, 2px); } }
+      @keyframes plugSyncLower { from { transform: translate(0, 0); } to { transform: translate(2px, -2px); } }
+      @keyframes plugSyncLeg { from { opacity: 1; } to { opacity: 0; } }
+      .plug-icon.syncing .plug-upper-part { animation: plugSyncUpper .7s ease-in-out infinite alternate; }
+      .plug-icon.syncing .plug-lower-part { animation: plugSyncLower .7s ease-in-out infinite alternate; }
+      .plug-icon.syncing .plug-lower-leg { animation: plugSyncLeg .7s ease-in-out infinite alternate; }
+      .plug-icon:not(.connected):not(.syncing):hover { color: var(--primary); }
+      .plug-icon:not(.connected):not(.syncing):hover .plug-upper-part { transform: translate(-2px, 2px); }
+      .plug-icon:not(.connected):not(.syncing):hover .plug-lower-part { transform: translate(2px, -2px); }
+      .plug-icon:not(.connected):not(.syncing):hover .plug-lower-leg { opacity: 0; }
+      @media (prefers-reduced-motion: reduce) {
+        .plug-icon.syncing .plug-upper-part, .plug-icon.syncing .plug-lower-part, .plug-icon.syncing .plug-lower-leg { animation: none; }
+      }
+      /* স্ট্যাট বাক্সের আইকন + হোভারে হালকা ওঠা */
+      .s-ico { display: inline-flex; flex: none; }
+      .s-ico svg { width: 15px; height: 15px; display: block; }
+      .stat-btn { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .2s ease; }
+      .stat-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, .16); }
+      /* ব্যালান্স কার্ড: ওয়ালেট আইকন, চিপের তীর, মান বদলে হালকা ঝলক */
+      .balance-card .lbl { display: flex; align-items: center; gap: 7px; }
+      .balance-card .lbl .lbl-ico { width: 17px; height: 17px; color: var(--primary); flex: none; }
+      .balance-chip .c-lbl { display: flex; align-items: center; gap: 5px; }
+      .balance-chip .c-lbl .c-ico { width: 13px; height: 13px; flex: none; }
+      #balanceVal.flash { animation: balFlash .55s ease; }
+      @keyframes balFlash {
+        0% { text-shadow: 0 0 0 rgba(74, 222, 158, 0); }
+        35% { text-shadow: 0 0 18px rgba(74, 222, 158, .55); }
+        100% { text-shadow: 0 0 0 rgba(74, 222, 158, 0); }
+      }
+      /* ক্যাটাগরি আইকন — ইতিহাস, লেজেন্ড, গড়-বাদ মোডাল */
+      .e-cat-ico { display: inline-flex; width: 14px; height: 14px; vertical-align: -2px; margin-right: 3px; }
+      .e-cat-ico svg { width: 14px; height: 14px; display: block; }
+      .l-ico { display: inline-flex; width: 15px; height: 15px; vertical-align: -2px; margin-right: 2px; }
+      .l-ico svg { width: 15px; height: 15px; display: block; }
+      .x-ico { display: inline-flex; width: 16px; height: 16px; flex: none; }
+      .x-ico svg { width: 16px; height: 16px; display: block; }
+      /* সেকশন হেডারের আইকন — কার্ডে হোভার করলে হালকা বড় হয় */
+      .panel h2 svg { transition: transform .25s ease; }
+      .panel:hover h2 svg { transform: scale(1.14); }
 </style>
   </head>
   <body>
@@ -1302,34 +1354,34 @@
       <section class="summary" aria-label="সারসংক্ষেপ">
         <div class="balance-card">
           <div>
-            <div class="lbl">মোট ব্যালান্স (সব সময়ের)</div>
+            <div class="lbl"><svg class="lbl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>মোট ব্যালান্স (সব সময়ের)</div>
             <div class="big" id="balanceVal">৳ ০</div>
           </div>
           <div class="balance-side">
-            <div class="balance-chip"><div class="c-lbl">মোট জমা</div><div class="c-val" id="totalIncomeVal">৳ ০</div></div>
-            <div class="balance-chip"><div class="c-lbl">মোট খরচ</div><div class="c-val" id="totalExpenseVal">৳ ০</div></div>
+            <div class="balance-chip"><div class="c-lbl"><svg class="c-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>মোট জমা</div><div class="c-val" id="totalIncomeVal">৳ ০</div></div>
+            <div class="balance-chip"><div class="c-lbl"><svg class="c-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 8v9H8"/></svg>মোট খরচ</div><div class="c-val" id="totalExpenseVal">৳ ০</div></div>
           </div>
         </div>
         <button class="card stat stat-btn" type="button" id="statToday" aria-haspopup="dialog">
-          <span class="s-lbl"><span class="dot" style="background:var(--expense)"></span>আজকের খরচ</span>
+          <span class="s-lbl"><span class="s-ico" style="color:var(--expense)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.6" fill="currentColor" stroke="none"/></svg></span>আজকের খরচ</span>
           <span class="s-val" id="todayExpenseVal" style="display:block">৳ ০</span>
           <span class="s-sub" id="todayIncomeLine" style="display:block">আজকের জমা ৳ ০</span>
           <span class="s-more">ক্যাটাগরি অনুযায়ী দেখুন ›</span>
         </button>
         <button class="card stat stat-btn" type="button" id="statWeek" aria-haspopup="dialog">
-          <span class="s-lbl"><span class="dot" style="background:var(--cat-2)"></span>এই সপ্তাহের খরচ</span>
+          <span class="s-lbl"><span class="s-ico" style="color:var(--cat-2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="14" x2="17" y2="14"/><line x1="7" y1="17.5" x2="13" y2="17.5"/></svg></span>এই সপ্তাহের খরচ</span>
           <span class="s-val" id="weekExpenseVal" style="display:block">৳ ০</span>
           <span class="s-sub" id="weekIncomeLine" style="display:block">এই সপ্তাহের জমা ৳ ০</span>
           <span class="s-more">ক্যাটাগরি অনুযায়ী দেখুন ›</span>
         </button>
         <button class="card stat stat-btn" type="button" id="statMonth" aria-haspopup="dialog">
-          <span class="s-lbl"><span class="dot" style="background:var(--amber)"></span><span id="monthExpenseLbl">এই মাসের খরচ</span></span>
+          <span class="s-lbl"><span class="s-ico" style="color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8.5" cy="14.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="14.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="18" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="18" r="1.1" fill="currentColor" stroke="none"/></svg></span><span id="monthExpenseLbl">এই মাসের খরচ</span></span>
           <span class="s-val" id="monthExpenseVal" style="display:block">৳ ০</span>
           <span class="s-sub" id="monthIncomeLine" style="display:block">মাসের জমা ৳ ০</span>
           <span class="s-more">ক্যাটাগরি অনুযায়ী দেখুন ›</span>
         </button>
         <button class="card stat stat-btn" type="button" id="statAvg" aria-haspopup="dialog">
-          <span class="s-lbl"><span class="dot" style="background:var(--cat-6)"></span>গড় দৈনিক খরচ</span>
+          <span class="s-lbl"><span class="s-ico" style="color:var(--cat-6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>গড় দৈনিক খরচ</span>
           <span class="s-val" id="avgDailyVal" style="display:block">৳ ০</span>
           <span class="s-sub" id="avgDailySub" style="display:block">নির্বাচিত মাস অনুযায়ী</span>
           <span class="s-more">ক্যাটাগরি বাদ দিন ›</span>
@@ -1499,6 +1551,7 @@
             গিটহাব ব্যাকআপ
           </h2>
           <div class="backup-head-side">
+            <svg class="plug-icon" id="plugIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="গিটহাব সংযোগের অবস্থা"><path d="M7 12l5 5l-1.5 1.5a3.536 3.536 0 1 1 -5 -5l1.5 -1.5z" class="plug-lower-part"/><path d="M17 12l-5 -5l1.5 -1.5a3.536 3.536 0 1 1 5 5l-1.5 1.5z" class="plug-upper-part"/><path d="M3 21l2.5 -2.5" class="plug-lower-part"/><path d="M18.5 5.5l2.5 -2.5" class="plug-upper-part"/><path d="M10 11l-2 2" class="plug-lower-part plug-lower-leg"/><path d="M13 14l-2 2" class="plug-lower-part plug-lower-leg"/></svg>
             <p class="sync-line" id="ghSyncStatus"></p>
             <button class="btn btn-tonal btn-sm" type="button" id="ghMinToggle" hidden style="display:none" aria-expanded="true">minimize করুন</button>
           </div>
@@ -1651,6 +1704,31 @@
       var i = ALL_CATS.indexOf(cat);
       return CAT_COLORS[(i < 0 ? ALL_CATS.length : i) % CAT_COLORS.length];
     }
+    /* v85 টেস্ট: ক্যাটাগরি আইকন — Lucide ধাঁচের সরল stroke আইকন
+       (24×24, stroke 2, round caps)। ইতিহাস, লেজেন্ড আর গড়-বাদ
+       মোডালে ক্যাটাগরির নামের পাশে বসে। */
+    var CAT_ICONS = {
+      'খাবার': '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+      'বাজার-সদাই': '<path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="M3.5 11l1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4"/><path d="M9 11l1 9"/><path d="M15 11l-1 9"/>',
+      'যাতায়াত': '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+      'বিল ও ভাড়া': '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>',
+      'স্বাস্থ্য': '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+      'শিক্ষা': '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+      'কেনাকাটা': '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+      'বিনোদন': '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4V8Z"/>',
+      'ফ্যামিলি থেকে প্রাপ্ত': '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+      'টিউশন': '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 10v6"/>',
+      'ফ্রিল্যান্স': '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+      'ক্রিপ্টো / P2P': '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>',
+      'উপহার': '<path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+      'অন্যান্য': '<circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/>'
+    };
+    function catIcon(cat) {
+      var p = CAT_ICONS[cat];
+      if (!p) return '';
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+    }
+
     /* পাই চার্টের রঙ — কোনো আলাদা hex নয়, সরাসরি CSS ভ্যারিয়েবল:
        সবুজ = var(--income) (জমার অঙ্ক যে রঙে লেখা হয়), লাল = var(--expense)
        (খরচের অঙ্ক যে স্যামন লালে লেখা হয় — গাঢ় থিমে #ff9d94, হালকা থিমে
@@ -3140,7 +3218,13 @@
     function renderSummary() {
       var all = state.entries;
       var inc = sumEntries(all, 'income'), exp = sumEntries(all, 'expense');
-      els.balanceVal.textContent = fmtMoney(inc - exp);
+      var balTxt = fmtMoney(inc - exp);
+      if (els.balanceVal.textContent !== balTxt) {
+        els.balanceVal.textContent = balTxt;
+        els.balanceVal.classList.remove('flash');
+        void els.balanceVal.offsetWidth;
+        els.balanceVal.classList.add('flash');
+      }
       els.totalIncomeVal.textContent = fmtMoney(inc);
       els.totalExpenseVal.textContent = fmtMoney(exp);
 
@@ -3258,7 +3342,7 @@
         var excluded = state.avgExclude.indexOf(cat) !== -1;
         html += '<label class="avg-ex-row' + (excluded ? ' excluded' : '') + '">' +
           '<input type="checkbox" data-avg-ex-cat="' + escapeHtml(cat) + '"' + (excluded ? ' checked' : '') + '>' +
-          '<span class="x-name"><span class="dot" style="background:' + catColor(cat) + '"></span>' + escapeHtml(cat) + '</span>' +
+          '<span class="x-name"><span class="dot" style="background:' + catColor(cat) + '"></span><span class="x-ico" style="color:' + catColor(cat) + '">' + catIcon(cat) + '</span>' + escapeHtml(cat) + '</span>' +
           '<span class="x-amt">' + fmtMoney(byCat[cat] || 0) + '</span></label>';
       });
       els.avgExcludeList.innerHTML = html;
@@ -3535,7 +3619,7 @@
         var pct = (r.val / total) * 100;
         var pctTxt = fmtNum.format(Math.round(pct * 10) / 10);
         html += '<div class="legend-row" data-hl-type="' + type + '" data-hl-cat="' + escapeHtml(r.cat) + '"><span class="sw" style="background:' + color + '"></span>' +
-          '<span class="l-name">' + escapeHtml(r.cat) + ' <span class="l-pct">(' + pctTxt + '%)</span></span>' +
+          '<span class="l-name"><span class="l-ico" style="color:' + color + '">' + catIcon(r.cat) + '</span>' + escapeHtml(r.cat) + ' <span class="l-pct">(' + pctTxt + '%)</span></span>' +
           '<span class="l-val">' + fmtMoney(r.val) + '</span>' +
           '<span class="legend-bar"><div style="width:' + pct.toFixed(1) + '%;background:' + color + '"></div></span></div>';
       });
@@ -3629,7 +3713,7 @@
             var pct = (s.val / totalAll) * 100;
             var pctTxt = fmtNum.format(Math.round(pct * 10) / 10);
             mhtml += '<div class="legend-row" data-hl-type="' + s.type + '"><span class="sw" style="background:' + s.color + '"></span>' +
-              '<span class="l-name">' + s.label + ' <span class="l-pct">(' + pctTxt + '%)</span></span>' +
+              '<span class="l-name"><span class="l-ico" style="color:' + s.color + '">' + (s.type === 'income' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 8v9H8"/></svg>') + '</span>' + s.label + ' <span class="l-pct">(' + pctTxt + '%)</span></span>' +
               '<span class="l-val">' + fmtMoney(s.val) + '</span>' +
               '<span class="legend-bar"><div style="width:' + pct.toFixed(1) + '%;background:' + s.color + '"></div></span></div>';
           });
@@ -3658,7 +3742,7 @@
           var pct = (r.val / totalExp) * 100;
           var pctTxt = fmtNum.format(Math.round(pct * 10) / 10);
           html += '<div class="legend-row" data-hl-cat="' + escapeHtml(r.cat) + '"><span class="sw" style="background:' + catColor(r.cat) + '"></span>' +
-            '<span class="l-name">' + escapeHtml(r.cat) + ' <span class="l-pct">(' + pctTxt + '%)</span></span>' +
+            '<span class="l-name"><span class="l-ico" style="color:' + catColor(r.cat) + '">' + catIcon(r.cat) + '</span>' + escapeHtml(r.cat) + ' <span class="l-pct">(' + pctTxt + '%)</span></span>' +
             '<span class="l-val">' + fmtMoney(r.val) + '</span>' +
             '<span class="legend-bar"><div style="width:' + pct.toFixed(1) + '%;background:' + catColor(r.cat) + '"></div></span></div>';
         });
@@ -3824,7 +3908,7 @@
         groupsHtml += '<div class="entry ' + e.type + '">' +
           '<span class="e-ico">' + (e.type === 'income' ? ICON_UP : ICON_DOWN) + '</span>' +
           '<div class="e-main"><div class="e-desc">' + escapeHtml(e.desc) + '</div>' +
-          '<div class="e-meta">' + escapeHtml(e.category) + ' · ' + escapeHtml(dayLabel(e.date)) + '</div></div>' +
+          '<div class="e-meta"><span class="e-cat-ico" style="color:' + catColor(e.category) + '">' + catIcon(e.category) + '</span>' + escapeHtml(e.category) + ' · ' + escapeHtml(dayLabel(e.date)) + '</div></div>' +
           '<span class="e-amt">' + (e.type === 'income' ? '+' : '−') + fmtMoney(e.poisha) + '</span>' +
           '<span class="e-actions">' +
           '<button class="icon-btn" type="button" data-action="edit" data-id="' + e.id + '" aria-label="সম্পাদনা করুন">' + ICON_EDIT + '</button>' +
@@ -5914,7 +5998,21 @@
       }
       els.ghSyncStatus.textContent = msg;
       refreshSyncChip();
+      updatePlugIcon();
     }
+    /* v85 টেস্ট: গিটহাব সংযোগের প্লাগ আইকন — itshover-এর
+       plug-connected-icon-এর SVG, অ্যানিমেশনটা CSS-এ বানানো।
+       সংযোগ নেই → প্লাগ খোলা (ধূসর); যুক্ত → প্লাগ জোড়া (সবুজ);
+       সিঙ্ক হচ্ছে → জোড়া-খোলার অ্যানিমেশন ঘুরতে থাকে। */
+    function updatePlugIcon() {
+      var icon = document.getElementById('plugIcon');
+      if (!icon) return;
+      var connected = !!(ghToken && ghPassphrase && cryptoOk);
+      icon.classList.toggle('connected', connected && !syncBusy);
+      icon.classList.toggle('syncing', connected && syncBusy);
+      icon.setAttribute('aria-label', !connected ? 'গিটহাব সংযোগ নেই' : (syncBusy ? 'সিঙ্ক হচ্ছে…' : 'গিটহাবে যুক্ত'));
+    }
+
     // প্রতিটি বদলের (যোগ/সম্পাদনা/মোছা/বাজেট/আমদানি) পর ডাকা হয়
     function markChanged() {
       syncMeta.updatedAt = new Date().toISOString();
