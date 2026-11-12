@@ -683,7 +683,6 @@
       .entry .e-actions { display: flex; gap: 6px; flex: none; }
       .list-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 12px; font-size: 14.5px; color: var(--ink-2); }
       .list-footer strong { color: var(--ink); }
-      .data-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 
       /* ---------- ডেইলি খরচ: মাসের প্রতিদিনের মোট খরচ ----------
          হিস্টোরি সেকশনটাই দুই ভিউতে বদলায় — এন্ট্রি তালিকা আর ডেইলি
@@ -1164,8 +1163,7 @@
       /* ---------- পিডিএফ বোতাম: হেডার থেকে সরিয়ে ----------
          মোবাইলে বোতামটা গিটহাব ব্যাকআপ অংশের ঠিক ওপরের সারিতে
          থাকে (পুরো প্রস্থ জুড়ে); ডেস্কটপে (≥960px) স্ক্রিপ্ট
-         বোতামটাকে ট্রানজেকশন হিস্টোরি কার্ডের ভেতরে CSV বোতামগুলোর
-         নিচের ফাঁকা জায়গায় বসিয়ে দেয়। */
+         বোতামটাকে ট্রানজেকশন হিস্টোরি কার্ডের ভেতরে বসিয়ে দেয়। */
       .pdf-slot { margin-top: 14px; }
       .pdf-slot #pdfBtn { width: 100%; justify-content: center; }
       @media (min-width: 960px) {
@@ -1489,17 +1487,6 @@
               <span>দেখানো হচ্ছে <strong id="shownCount">০</strong>টি এন্ট্রি</span>
               <span>জমা <strong id="shownIncome">৳ ০</strong> · খরচ <strong id="shownExpense">৳ ০</strong></span>
             </div>
-            <div class="data-tools">
-              <button class="btn btn-outline btn-sm" type="button" id="csvBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                হিসাব নামান (সিএসভি)
-              </button>
-              <button class="btn btn-outline btn-sm" type="button" id="importBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                সিএসভি থেকে আনুন
-              </button>
-              <input type="file" id="importFile" accept=".csv,text/csv" style="display:none" />
-            </div>
             </div>
             <!-- ডেইলি খরচ ভিউ: নির্বাচিত মাসের প্রতিদিনের মোট খরচ —
                  সারিগুলো renderDaily() আসল এন্ট্রি থেকে বানায় -->
@@ -1521,7 +1508,7 @@
 
       <!-- মাসিক পিডিএফ বোতাম: মোবাইলে এখানে — গিটহাব ব্যাকআপের
            ঠিক ওপরে; ডেস্কটপে (≥960px) স্ক্রিপ্ট বোতামটাকে
-           ট্রানজেকশন হিস্টোরি কার্ডে CSV বোতামগুলোর নিচে সরিয়ে নেয় -->
+           ট্রানজেকশন হিস্টোরি কার্ডের ভেতরে সরিয়ে নেয় -->
       <div class="pdf-slot" id="pdfSlotMobile">
         <button class="btn btn-primary" id="pdfBtn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1891,7 +1878,7 @@
      'budgetInput', 'budgetSaveBtn', 'budgetView', 'budgetEmpty', 'budgetBar', 'budgetSpent', 'budgetTotal',
      'budgetRemain', 'budgetMonthLbl', 'budgetMinToggle', 'budgetPanel', 'budgetSettingsBody',
      'searchInput', 'periodFilter', 'typeFilter', 'catFilter', 'entryList', 'listFooter', 'shownCount', 'shownIncome',
-     'shownExpense', 'csvBtn', 'importBtn', 'importFile', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
+     'shownExpense', 'micBtn', 'fabBtn', 'voiceStatus', 'voiceLive',
      'voiceLiveText', 'voiceDetected', 'toast', 'voiceNotice', 'micEnableBtn', 'voiceSlot',
      'fabSyncIcon', 'fabSyncText', 'micSyncIcon', 'restoreOverlay',
      'parserModelVersion', 'parserModelStatus', 'parserModelBtn',
@@ -5185,7 +5172,7 @@
     if (els.dateInput) makeDateField(els.dateInput, todayStr());
 
     /* ============================================================
-       পিডিএফ প্রতিবেদন ও সিএসভি
+       পিডিএফ প্রতিবেদন
        ============================================================ */
     /* ============================================================
        পিডিএফ প্রতিবেদন — ক্যানভাসে এঁকে আসল পিডিএফ ফাইল তৈরি
@@ -5430,7 +5417,7 @@
     /* ---------- পিডিএফ বোতামের জায়গা: পর্দা অনুযায়ী ----------
        মোবাইলে (<960px) বোতামটা গিটহাব ব্যাকআপ অংশের ঠিক ওপরের
        সারিতে থাকে; ডেস্কটপে (≥960px) ট্রানজেকশন হিস্টোরি কার্ডের
-       ভেতরে CSV বোতামগুলোর নিচের ফাঁকা জায়গায় বসে। বোতামটা
+       ভেতরে বসে। বোতামটা
        একটাই — শুধু জায়গা বদলায়, তাই কাজ ও আইডি একই থাকে। */
     var pdfBtnMq = window.matchMedia('(min-width: 960px)');
     function placePdfBtn() {
@@ -5453,74 +5440,6 @@
       document.body.appendChild(a); a.click();
       setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 400);
     }
-    function csvEscape(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
-    els.csvBtn.addEventListener('click', function () {
-      if (state.entries.length === 0) { showToast('নামানোর মতো কোনো এন্ট্রি নেই'); return; }
-      var lines = ['তারিখ,ধরন,ক্যাটাগরি,বিবরণ,টাকার পরিমাণ'];
-      var sorted = state.entries.slice().sort(function (a, b) { return a.date === b.date ? a.id - b.id : (a.date < b.date ? -1 : 1); });
-      sorted.forEach(function (e) {
-        lines.push([e.date, e.type === 'income' ? 'জমা' : 'খরচ', csvEscape(e.category), csvEscape(e.desc), (e.poisha / 100).toFixed(2)].join(','));
-      });
-      var blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-      downloadBlob(blob, 'khorochpotro-all-entries.csv');
-      showToast('সিএসভি ফাইল নামানো হয়েছে');
-    });
-    function parseCsvLine(line) {
-      var out = [], cur = '', inQ = false;
-      for (var i = 0; i < line.length; i++) {
-        var ch = line[i];
-        if (inQ) {
-          if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
-          else cur += ch;
-        } else if (ch === '"') inQ = true;
-        else if (ch === ',') { out.push(cur); cur = ''; }
-        else cur += ch;
-      }
-      out.push(cur);
-      return out;
-    }
-    els.importBtn.addEventListener('click', function () { els.importFile.click(); });
-    els.importFile.addEventListener('change', function () {
-      var file = els.importFile.files && els.importFile.files[0];
-      if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function () {
-        var text = String(reader.result || '').replace(/^\uFEFF/, '');
-        var lines = text.split(/\r?\n/).filter(function (l) { return l.trim(); });
-        var added = 0, skipped = 0;
-        lines.forEach(function (line, idx) {
-          if (idx === 0 && line.indexOf('তারিখ') !== -1) return; // শিরোনাম
-          var cols = parseCsvLine(line);
-          if (cols.length < 5) { skipped++; return; }
-          // বাড়তি কলাম মানে বিবরণে (বা হাজার-কমাওয়ালা অঙ্কে) উদ্ধৃতি ছাড়া
-          // কমা ছিল — শেষের কলামটাই অঙ্ক ধরে মাঝের অংশ বিবরণে জোড়া হয়, আর
-          // অঙ্কটা দুই কলামে ভাগ হয়ে থাকলে (১ | ২৫০.৫০) সেটা আবার জোড়া লাগে
-          var amtRaw = cols[cols.length - 1];
-          var descEnd = cols.length - 1;
-          if (cols.length > 5 && /^\d+$/.test(cols[cols.length - 2].trim()) && /^\d+\.\d{1,2}$/.test(amtRaw.trim())) {
-            amtRaw = cols[cols.length - 2].trim() + ',' + amtRaw.trim();
-            descEnd = cols.length - 2;
-          }
-          var date = normalizeDigits(cols[0]).trim();
-          var type = (cols[1].indexOf('জমা') !== -1 || /income/i.test(cols[1])) ? 'income' : 'expense';
-          var cat = cols[2].trim().slice(0, 60) || 'অন্যান্য';
-          var desc = cols.slice(3, descEnd).join(',').trim() || cat;
-          var poisha = parseAmountToPoisha(amtRaw);
-          if (!validDateStr(date) || poisha == null) { skipped++; return; }
-          state.entries.push({ id: state.nextId++, type: type, poisha: poisha, category: cat, desc: desc.slice(0, 120), date: date });
-          added++;
-        });
-        if (added > 0) markChanged();
-        renderAll();
-        showToast(bnInt(added) + 'টি এন্ট্রি আনা হয়েছে' + (skipped ? ', ' + bnInt(skipped) + 'টি বাদ গেছে' : ''));
-        els.importFile.value = '';
-      };
-      reader.onerror = function () {
-        showToast('ফাইলটা পড়া যায়নি — আবার চেষ্টা করুন');
-        els.importFile.value = '';
-      };
-      reader.readAsText(file);
-    });
 
     /* ============================================================
        গিটহাব স্বয়ংক্রিয় ব্যাকআপ — shabbirhsadhon/khorochpotro
