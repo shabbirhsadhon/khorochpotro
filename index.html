@@ -235,7 +235,7 @@
       /* ---------- Buttons ---------- */
       .btn {
         display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px;
-        padding: 11px 18px; font-weight: 600; font-size: 15px; min-height: 44px;
+        padding: 14px 20px; font-weight: 600; font-size: 15px; min-height: 44px;
         transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
       }
       .btn svg { width: 19px; height: 19px; flex: none; }
@@ -396,7 +396,7 @@
       .field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--ink-2); }
       .field input, .field select {
         width: 100%; min-width: 0; border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--radius-sm);
-        padding: 12px 14px; font-size: 16px; min-height: 48px; transition: border-color .15s, box-shadow .15s;
+        padding: 14px 16px; font-size: 16px; min-height: 48px; transition: border-color .15s, box-shadow .15s;
       }
       .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-container); outline: none; }
       .field .amount-wrap { position: relative; }
@@ -652,12 +652,13 @@
 
       /* ---------- History ---------- */
       .history-tools { display: grid; gap: 10px; margin-bottom: 6px; }
+      .history-tools > * { min-width: 0; }
       .search-wrap { position: relative; }
       .search-wrap svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 19px; height: 19px; color: var(--ink-3); }
       .search-wrap input { width: 100%; border: 1.5px solid var(--line); border-radius: 999px; padding: 11px 14px 11px 42px; font-size: 15.5px; background: var(--surface); min-height: 46px; }
       .search-wrap input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--primary-container); }
       .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
-      .filter-row select { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 9px 12px; font-size: 14.5px; font-weight: 500; min-height: 40px; }
+      .filter-row select { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 11px 14px; font-size: 14.5px; font-weight: 500; min-height: 40px; }
       .chips { display: flex; gap: 6px; flex-wrap: wrap; }
       .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 600; color: var(--ink-2); min-height: 38px; }
       .chip[aria-pressed="true"] { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
@@ -666,7 +667,7 @@
       .day-head .d-name { font-weight: 700; font-size: 15.5px; }
       .day-head .d-total { font-size: 13.5px; color: var(--ink-2); white-space: nowrap; }
       .entry {
-        display: flex; align-items: flex-start; gap: 12px; padding: 13px 12px; border: 1px solid var(--line);
+        display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid var(--line);
         border-radius: 16px; margin-bottom: 8px; background: var(--surface); transition: box-shadow .15s;
       }
       .entry:hover { box-shadow: var(--shadow-sm); }
@@ -740,9 +741,10 @@
       .daily-day-amt { font-size: 15px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
       .daily-day-amt.zero { color: var(--ink-3); font-weight: 500; }
       @media (max-width: 480px) {
-        .period-dd .dd-wrap { min-width: 0; flex: 1 1 0; }
-        .daily-btn { flex: 1 1 0; padding: 0 12px; font-size: 14.5px; }
-        .daily-back-btn { padding: 0 12px; font-size: 14.5px; }
+        .history-tools .period-dd .dd-wrap { min-width: 0; flex: 1 1 0; }
+        .period-dd select { flex: 1 1 0; min-width: 0; }
+        .daily-btn { flex: 1 1 0; padding: 0 16px; font-size: 14.5px; }
+        .daily-back-btn { padding: 0 16px; font-size: 14.5px; }
         .daily-row { grid-template-columns: 92px 1fr auto; gap: 8px; }
       }
 
@@ -905,7 +907,7 @@
          বোতাম দ্বিতীয় লাইনে নেমে আসে — সারি একটু লম্বা হয়, কিন্তু অঙ্কের
          একটি অক্ষরও কাটে না আর ডানে-বামে ঠেলতে হয় না। */
       @media (max-width: 600px) {
-        .entry { flex-wrap: wrap; row-gap: 9px; }
+        .entry { flex-wrap: wrap; row-gap: 12px; }
         .entry .e-main { flex: 1 1 calc(100% - 54px); }
         .entry .e-amt { order: 3; margin-left: 54px; font-size: 17px; }
         .entry .e-actions { order: 4; margin-left: auto; }
@@ -948,9 +950,9 @@
       .dd-btn svg { width: 14px; height: 14px; flex: none; color: var(--ink-3); transition: transform .18s ease; }
       .dd-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
       .dd-btn:focus-visible { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-container); }
-      .field .dd-btn { border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 16px; font-weight: 500; min-height: 48px; box-shadow: none; }
+      .field .dd-btn { border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 16px; font-weight: 500; min-height: 48px; box-shadow: none; }
       .field .dd-btn:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-container); }
-      .filter-row .dd-btn { padding: 9px 12px; font-size: 14.5px; font-weight: 500; min-height: 40px; box-shadow: none; }
+      .filter-row .dd-btn { padding: 11px 14px; font-size: 14.5px; font-weight: 500; min-height: 40px; box-shadow: none; }
       .dd-panel {
         position: fixed; z-index: 80; background: var(--surface); color: var(--ink);
         border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-lg);
