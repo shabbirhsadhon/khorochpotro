@@ -1380,12 +1380,11 @@
           <span class="s-sub" id="monthIncomeLine" style="display:block">মাসের জমা ৳ ০</span>
           <span class="s-more">ক্যাটাগরি অনুযায়ী দেখুন ›</span>
         </button>
-        <button class="card stat stat-btn" type="button" id="statAvg" aria-haspopup="dialog">
+        <div class="card stat" id="statAvg">
           <span class="s-lbl"><span class="s-ico" style="color:var(--cat-6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>গড় দৈনিক খরচ</span>
           <span class="s-val" id="avgDailyVal" style="display:block">৳ ০</span>
-          <span class="s-sub" id="avgDailySub" style="display:block">নির্বাচিত মাস অনুযায়ী</span>
-          <span class="s-more">ক্যাটাগরি বাদ দিন ›</span>
-        </button>
+          <span class="s-sub" id="avgDailySub" style="display:block">বাকি দিনের হিসাবে</span>
+        </div>
       </section>
 
       <div class="grid single-col">
@@ -3233,15 +3232,19 @@
       els.monthExpenseLbl.textContent = monthLabel(ym) + ' — খরচ';
       els.monthExpenseVal.textContent = fmtMoney(mExp);
       els.monthIncomeLine.textContent = 'মাসের জমা ' + fmtMoney(mInc);
-      var days = avgDenominator(ym);
-      // গড় শুধু বাদ-না-দেওয়া ক্যাটাগরি আর দিনের খরচে — বাদ দেওয়া দিন
-      // দিনের সংখ্যা থেকেও বাদ যায়; মাসের মোট (mExp), আজ/সপ্তাহের মোট,
-      // ডেইলি খরচ, ক্যাটাগরি ভাগ আর পিডিএফের গড় — কোনোটাই বদলায় না (v79, v84)
-      var avg = days > 0 ? Math.round(avgMonthExpense(monthList) / days) : 0;
-      els.avgDailyVal.textContent = fmtMoney(avg);
-      els.avgDailySub.textContent = monthLabel(ym) + ' · ' + bnInt(days) + ' দিন ধরে' +
-        (state.avgExclude.length ? ' · ' + bnInt(state.avgExclude.length) + 'টি ক্যাটাগরি বাদ' : '') +
-        (state.avgExcludeDays.length ? ' · ' + bnInt(state.avgExcludeDays.length) + 'টি দিন বাদ' : '');
+      // v91: এই বাক্সে পুরনো গড় আর দেখানো হয় না — এখন মোট ব্যালান্স ÷
+      // বর্তমান মাসের বাকি দিন (দিনে সর্বোচ্চ কত খরচ করা যায়)।
+      // ভিত্তি সবসময় মোট ব্যালান্স (সব এন্ট্রির জমা − খরচ); বাজেট এখানে
+      // ব্যবহার হয় না। বাদ-দেওয়া ক্যাটাগরি/দিনের অঙ্ক শুধু পিডিএফের
+      // গড়ে আর বাদ-প্যানেলের কোডে আগের মতোই আছে — এই বাক্সে নয়।
+      var curYm = currentMonth();
+      var daysLeft = daysInMonth(curYm) - new Date().getDate();
+      var bal = inc - exp;
+      var maxDaily = (daysLeft > 0 && bal > 0) ? Math.round(bal / daysLeft) : 0;
+      els.avgDailyVal.textContent = fmtMoney(maxDaily);
+      els.avgDailySub.textContent = daysLeft > 0
+        ? 'বাকি ' + bnInt(daysLeft) + ' দিন · ব্যালান্স ' + fmtMoney(bal)
+        : 'আজ মাসের শেষ দিন · ব্যালান্স ' + fmtMoney(bal);
       els.budgetMonthLbl.textContent = monthLabel(ym);
     }
 
@@ -5334,8 +5337,6 @@
     els.statWeek.addEventListener('click', function () { openPeriodPreview('week'); });
     els.statMonth.addEventListener('click', function () { openPeriodPreview('month'); });
     els.periodModalClose.addEventListener('click', function () { closePeriodPreview(); });
-    // গড় বাক্সে চাপ দিলে বাদ-ক্যাটাগরির প্যানেল — বদল সঙ্গে সঙ্গে গড়ে বসে
-    els.statAvg.addEventListener('click', function () { openAvgExcludePanel(); });
     els.avgExcludeClose.addEventListener('click', function () { closeAvgExcludePanel(); });
     els.avgExcludeModal.addEventListener('click', function (ev) { if (ev.target === els.avgExcludeModal) closeAvgExcludePanel(); });
     els.avgExcludeList.addEventListener('change', function (ev) {
