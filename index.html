@@ -119,8 +119,8 @@
         --shadow-sm: 0 1px 2px rgba(16, 42, 33, .06), 0 2px 8px rgba(16, 42, 33, .05);
         --shadow-md: 0 2px 6px rgba(16, 42, 33, .07), 0 10px 28px rgba(16, 42, 33, .09);
         --shadow-lg: 0 6px 16px rgba(7, 87, 62, .28), 0 18px 40px rgba(7, 87, 62, .22);
-        --radius: 20px;
-        --radius-sm: 12px;
+        --radius: 16px;
+        --radius-sm: 10px;
         --cat-1: #0b6e4f; --cat-2: #2563eb; --cat-3: #d97706; --cat-4: #b3261e;
         --cat-5: #7c3aed; --cat-6: #0891b2; --cat-7: #db2777; --cat-8: #65a30d; --cat-9: #64748b;
       }
@@ -263,16 +263,16 @@
       .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
       .balance-card {
         grid-column: span 12; padding: 22px 24px; border: 0; color: #fff;
-        background: linear-gradient(120deg, #0b6e4f, #0a5c43 55%, #084c38);
-        border-radius: 26px; box-shadow: var(--shadow-md);
+        background: #0a5c43;
+        border-radius: 16px; box-shadow: var(--shadow-md);
         display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
       }
-      @media (prefers-color-scheme: dark) { .balance-card { background: linear-gradient(120deg, #0d4530, #0a3828 60%, #072a1f); color: #eafff3; } }
+      @media (prefers-color-scheme: dark) { .balance-card { background: #0a3828; color: #eafff3; } }
       .balance-card .lbl { font-size: 15px; opacity: .85; font-weight: 500; }
       .balance-card .big { font-size: clamp(34px, 6vw, 48px); font-weight: 700; line-height: 1.15; margin-top: 2px; }
       .balance-card .sub { font-size: 14px; opacity: .85; margin-top: 4px; }
       .balance-side { display: flex; gap: 10px; flex-wrap: wrap; }
-      .balance-chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 16px; padding: 10px 16px; min-width: 128px; }
+      .balance-chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 12px; padding: 10px 16px; min-width: 128px; }
       .balance-chip .c-lbl { font-size: 13px; opacity: .85; }
       .balance-chip .c-val { font-size: 20px; font-weight: 700; }
       .stat { grid-column: span 6; padding: 16px 18px; }
@@ -318,7 +318,7 @@
       body.modal-open { overflow: hidden; }
       .modal-card {
         background: var(--surface); color: var(--ink); width: 100%; max-width: 520px; max-height: 86vh;
-        overflow-y: auto; overscroll-behavior: contain; border-radius: 22px 22px 0 0; padding: 20px; box-shadow: var(--shadow-lg);
+        overflow-y: auto; overscroll-behavior: contain; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: var(--shadow-lg);
         transform: translateY(103%); transition: transform .36s cubic-bezier(.32, .72, .24, 1);
         scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
       }
@@ -328,11 +328,11 @@
          কর্নারে দেখা যায়, চার কর্নারই গোল থাকে */
       .modal-card::-webkit-scrollbar { width: 6px; }
       .modal-card::-webkit-scrollbar-track { background: transparent; }
-      .modal-card::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+      .modal-card::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
       .modal-overlay.open .modal-card { transform: translateY(0); }
       @media (min-width: 640px) {
         .modal-overlay { align-items: center; padding: 20px; }
-        .modal-card { border-radius: 22px; transform: translateY(26px); opacity: 0; transition: transform .32s cubic-bezier(.32, .72, .24, 1), opacity .28s ease; }
+        .modal-card { border-radius: 20px; transform: translateY(26px); opacity: 0; transition: transform .32s cubic-bezier(.32, .72, .24, 1), opacity .28s ease; }
         .modal-overlay.open .modal-card { transform: translateY(0); opacity: 1; }
       }
       .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
@@ -392,6 +392,20 @@
       .seg button[aria-pressed="true"] { color: var(--ink); }
       .seg button[data-type="expense"][aria-pressed="true"] { color: var(--expense); }
       .seg button[data-type="income"][aria-pressed="true"] { color: var(--income); }
+      /* ---------- হিস্টোরি হেডারে সময় দেখানো/লুকানোর টগল (v93) ----------
+         খরচ/জমা-আয় সেগমেন্টের মতোই — ছোট, শুধু আইকন, লেখা নেই।
+         হ্যাঁ (ঘড়ি) সবুজ, না (ব্লক) লাল — সেগমেন্টের জমা/খরচের
+         রঙের হুবহু একই শেড (var(--income) / var(--expense))।
+         সময় সবসময় সংরক্ষিত হয়; এই টগল শুধু দেখানো/লুকানো নিয়ন্ত্রণ করে। */
+      .time-toggle { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 3px; margin: 0 0 0 auto; flex: none; position: relative; overflow: hidden; }
+      .time-toggle .seg-thumb { top: 3px; left: 3px; width: calc(50% - 4.5px); height: calc(100% - 6px); transition: transform .3s cubic-bezier(.45, 0, .2, 1); }
+      .time-toggle:not(.on) .seg-thumb { transform: translateX(calc(100% + 3px)); }
+      .time-toggle button { border: 0; background: transparent; border-radius: 999px; padding: 0; width: 32px; height: 32px; min-height: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--ink-2); transition: color .2s ease; position: relative; z-index: 1; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+      .time-toggle button:focus { outline: none; }
+      .time-toggle button:focus-visible { outline: none; border-radius: 999px; box-shadow: inset 0 0 0 2px var(--primary); }
+      .history-panel h2 .time-toggle svg { width: 18px; height: 18px; color: inherit; }
+      .time-toggle button[data-show="yes"][aria-pressed="true"] { color: var(--income); }
+      .time-toggle button[data-show="no"][aria-pressed="true"] { color: var(--expense); }
       .field { margin-bottom: 12px; }
       .field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--ink-2); }
       .field input, .field select {
@@ -525,7 +539,7 @@
       .cal-backdrop.open { opacity: 1; }
       .cal-panel {
         width: min(352px, 100%); background: var(--surface); color: var(--ink); border: 1px solid var(--line);
-        border-radius: 24px; box-shadow: var(--shadow-lg); padding: 20px 18px 16px;
+        border-radius: 20px; box-shadow: var(--shadow-lg); padding: 20px 18px 16px;
         transform: translateY(14px) scale(.97); opacity: 0;
         transition: transform .26s cubic-bezier(.3, .9, .3, 1), opacity .22s ease;
       }
@@ -596,8 +610,8 @@
       .budget-row { display: flex; gap: 8px; }
       .budget-row input { flex: 1; border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 11px 14px; font-size: 16px; min-height: 48px; background: var(--surface); min-width: 0; }
       .budget-row input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--primary-container); }
-      .progress { height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 14px; }
-      .progress > div { height: 100%; background: var(--primary); border-radius: 999px; transition: width .4s ease; width: 0; }
+      .progress { height: 12px; background: var(--surface-2); border-radius: 10px; overflow: hidden; margin-top: 14px; }
+      .progress > div { height: 100%; background: var(--primary); border-radius: 10px; transition: width .4s ease; width: 0; }
       .progress > div.over { background: var(--expense); }
       .budget-meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); margin-top: 8px; }
       .budget-meta strong { color: var(--ink); }
@@ -641,8 +655,8 @@
       .legend-row .l-name { font-weight: 500; }
       .legend-row .l-name .l-pct { color: var(--ink-3); font-size: 13px; }
       .legend-row .l-val { font-weight: 700; }
-      .legend-bar { grid-column: 2 / 4; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-      .legend-bar > div { height: 100%; border-radius: 999px; }
+      .legend-bar { grid-column: 2 / 4; height: 6px; background: var(--surface-2); border-radius: 10px; overflow: hidden; }
+      .legend-bar > div { height: 100%; border-radius: 10px; }
       /* ক্যাটাগরি সারিগুলো এন্ট্রি-তালিকায় (গ্রিড নয়) বসে — সেখানে
          সারির পর সারি ফাঁক ছাড়াই বসত, তাই প্রতিটি সারির নিজের
          মার্জিনে ফাঁক রাখা হয়, যেন কোনো সারির বাক্স/হাইলাইট
@@ -668,10 +682,10 @@
       .day-head .d-total { font-size: 13.5px; color: var(--ink-2); white-space: nowrap; }
       .entry {
         display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid var(--line);
-        border-radius: 16px; margin-bottom: 8px; background: var(--surface); transition: box-shadow .15s;
+        border-radius: 12px; margin-bottom: 8px; background: var(--surface); transition: box-shadow .15s;
       }
       .entry:hover { box-shadow: var(--shadow-sm); }
-      .entry .e-ico { width: 42px; height: 42px; border-radius: 13px; display: flex; align-items: center; justify-content: center; flex: none; }
+      .entry .e-ico { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none; }
       .entry .e-ico svg { width: 21px; height: 21px; }
       .entry.income .e-ico { background: var(--income-bg); color: var(--income); }
       .entry.expense .e-ico { background: var(--expense-bg); color: var(--expense); }
@@ -729,15 +743,15 @@
       .daily-month-total { font-size: 13.5px; color: var(--ink-3); font-weight: 500; white-space: nowrap; }
       .daily-month-total strong { color: var(--primary); font-weight: 800; }
       .daily-sub { color: var(--ink-3); font-size: 13.5px; margin: 0 2px 10px; }
-      .daily-row { display: grid; grid-template-columns: 104px 1fr auto; align-items: center; gap: 10px; padding: 6px 4px; border-radius: 12px; }
+      .daily-row { display: grid; grid-template-columns: 104px 1fr auto; align-items: center; gap: 10px; padding: 6px 4px; border-radius: 10px; }
       .daily-row + .daily-row { border-top: 1px solid var(--line); }
       .daily-row.today { background: var(--surface-2); border: 1px solid var(--line); margin: 2px 0; }
       .daily-row.today + .daily-row { border-top: none; }
       .daily-day-label { font-size: 14.5px; font-weight: 600; line-height: 1.35; }
       .daily-today-tag { font-style: normal; display: inline-block; font-size: 11.5px; font-weight: 700; color: var(--daily-btn-text); background: var(--daily-btn-bg); border-radius: 999px; padding: 1px 7px; margin-left: 4px; vertical-align: 2px; white-space: nowrap; }
-      .daily-bar-track { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+      .daily-bar-track { height: 12px; border-radius: 10px; background: var(--surface-2); overflow: hidden; }
       .daily-row.today .daily-bar-track { background: var(--surface-3); }
-      .daily-bar-fill { height: 100%; width: 0; border-radius: 999px; background: var(--primary); transition: width .9s cubic-bezier(.22, .8, .3, 1); }
+      .daily-bar-fill { height: 100%; width: 0; border-radius: 10px; background: var(--primary); transition: width .9s cubic-bezier(.22, .8, .3, 1); }
       .daily-day-amt { font-size: 15px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
       .daily-day-amt.zero { color: var(--ink-3); font-weight: 500; }
       @media (max-width: 480px) {
@@ -853,7 +867,7 @@
         .wrap { padding: 14px 12px 100px; }
         .panel { padding: 16px 14px; }
         .stat { padding: 13px 14px; }
-        .balance-card { padding: 18px 16px; border-radius: 22px; }
+        .balance-card { padding: 18px 16px; border-radius: 16px; }
         .balance-side { width: 100%; }
         .balance-chip { flex: 1 1 0; min-width: 0; }
         .month-tools { width: 100%; }
@@ -912,6 +926,8 @@
         .entry .e-amt { order: 3; margin-left: 54px; font-size: 17px; }
         .entry .e-actions { order: 4; margin-left: auto; }
       }
+      /* তারিখ আর সময় একসাথে থাকবে — ফোন ও ল্যাপটপ দুটোতেই, কখনো ভাঙবে না */
+      .e-meta .e-time, .m-meta .e-time { white-space: nowrap; }
 
       /* ---------- ড্রপডাউনের তীর: সব select-এ একই নিয়ম ----------
          ব্রাউজারের নিজের তীর কিনারায় চেপে বসে — তাই নিজের তীর বসানো হলো:
@@ -939,6 +955,15 @@
          "নির্বাচিত মাস" এক লাইনে ধরার মতো ন্যূনতম প্রস্থ রাখা)। */
       .period-dd { display: flex; justify-content: flex-start; align-items: center; gap: 8px; }
       .period-dd .dd-wrap { width: auto; flex: 0 1 auto; min-width: 196px; max-width: 100%; }
+      /* ডেস্কটপের সরু পরিসর (১২৪৮–১৩৯৯px): তিন কলামের মাঝের কলাম মাত্র
+         ৩২০px (মোড়ক ১১৬০px-এ আটকে), কার্ডের ভেতর ২৭৮px — ১৯৬px-এর
+         মেঝে রাখলে সারিটা ৩৩১px হয়ে ডেইলি খরচ বোতাম কাটা পড়ে। এই
+         পরিসরে মেঝে সরিয়ে দিলে ড্রপডাউন লেবেলের প্রস্থে বসে আর
+         সারিটা ধরে (সবচেয়ে লম্বা "নির্বাচিত মাস"-এও)। ১৪০০px-এর
+         ওপরে মেঝে আগের মতোই থাকে (সেখানে জায়গা আছে)। */
+      @media (min-width: 1248px) and (max-width: 1399px) {
+        .period-dd .dd-wrap { min-width: 0; }
+      }
       @media (max-width: 640px) { .month-tools .dd-wrap { flex: 1 1 auto; } }
       .dd-btn {
         display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
@@ -963,7 +988,7 @@
          দিত — স্বচ্ছ ট্র্যাক + পাতলা গোল থাম্বে চার কর্নারই গোল থাকে */
       .dd-panel::-webkit-scrollbar { width: 6px; }
       .dd-panel::-webkit-scrollbar-track { background: transparent; }
-      .dd-panel::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+      .dd-panel::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
       .dd-panel[hidden] { display: none; }
       .dd-item {
         display: block; width: 100%; text-align: left; border: 0; background: transparent; color: var(--ink);
@@ -1114,7 +1139,7 @@
         -webkit-overflow-scrolling: touch; padding-right: 2px;
       }
       #entryList::-webkit-scrollbar { width: 5px; }
-      #entryList::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+      #entryList::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
 
       /* ---------- ডেস্কটপ সাজানো: শুধু বড় পর্দা (≥960px) ----------
          ফোনের সাজানো হুবহু আগের মতোই থাকে — নিচের প্রতিটা নিয়ম
@@ -1196,7 +1221,7 @@
       /* ভয়েস পপআপ: FAB-এর গোল কোণা থেকে মরফ করে বড় বাক্স হয় */
       .voice-pop-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(10, 20, 16, 0); transition: background-color .3s ease; }
       .voice-pop-overlay.open { background: rgba(10, 20, 16, .45); }
-      .voice-pop { position: absolute; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); width: min(360px, calc(100vw - 48px)); max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); border-radius: 22px; padding: 20px; box-shadow: var(--shadow-lg); scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; transform-origin: calc(100% - 32px) calc(100% - 32px); transform: translateY(20px) scale(.06); opacity: 0; pointer-events: none; transition: transform .45s cubic-bezier(.22, 1, .36, 1), opacity .45s ease, border-radius .45s ease; }
+      .voice-pop { position: absolute; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); width: min(360px, calc(100vw - 48px)); max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); border-radius: 20px; padding: 20px; box-shadow: var(--shadow-lg); scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; transform-origin: calc(100% - 32px) calc(100% - 32px); transform: translateY(20px) scale(.06); opacity: 0; pointer-events: none; transition: transform .45s cubic-bezier(.22, 1, .36, 1), opacity .45s ease, border-radius .45s ease; }
       .voice-pop-overlay.open .voice-pop { transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; }
       .voice-pop .vp-inner { opacity: 0; transform: translateY(8px); transition: opacity .22s ease .14s, transform .22s ease .14s; text-align: center; position: relative; }
       .voice-pop-overlay.open .vp-inner { opacity: 1; transform: none; }
@@ -1222,7 +1247,7 @@
       .voice-pop .voice-slot.collapsed + .voice-detected { margin-top: 0; }
       .voice-pop::-webkit-scrollbar { width: 6px; }
       .voice-pop::-webkit-scrollbar-track { background: transparent; }
-      .voice-pop::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+      .voice-pop::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
       @media (prefers-reduced-motion: reduce) { .voice-pop, .voice-pop .vp-inner, .fab { transition: none !important; } }
       /* ================= v82: বাম কলামের মোড়ক =================
          মোবাইলে (<1248px) display:contents — মোড়কটা বাক্স তৈরি করে না,
@@ -1455,6 +1480,11 @@
             <h2 id="historyTitle">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
               <span id="historyTitleText">ট্রানজেকশন হিস্টোরি</span>
+              <div class="time-toggle" id="timeToggle" role="group" aria-label="হিস্টোরিতে সময় দেখানো">
+                <span class="seg-thumb" aria-hidden="true"></span>
+                <button type="button" data-show="yes" id="timeToggleYes" aria-pressed="false" aria-label="সময় দেখান"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+                <button type="button" data-show="no" id="timeToggleNo" aria-pressed="true" aria-label="সময় লুকান"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg></button>
+              </div>
             </h2>
             <div class="hist-view" id="histViewList">
             <div class="history-tools">
@@ -1738,6 +1768,7 @@
       budgets: {},            // 'YYYY-MM' -> poisha
       avgExclude: [],         // গড় দৈনিক খরচ থেকে বাদ দেওয়া খরচের ক্যাটাগরি (v79)
       avgExcludeDays: [],     // গড় দৈনিক খরচ থেকে বাদ দেওয়া দিন (v84) — মাসের দিনের নম্বর
+      showEntryTime: false,   // হিস্টোরিতে এন্ট্রির সময় দেখানো হবে কিনা (v93) — প্রথমবার বন্ধ (ব্লক)
       filter: { q: '', period: 'all', type: 'all', cat: 'all' }
     };
 
@@ -1833,6 +1864,33 @@
       var d = parseDateLocal(ds);
       return DAY_NAMES_BN[d.getDay()] + ', ' + fmtNum0.format(d.getDate()) + ' ' + MONTH_NAMES_BN[d.getMonth()];
     }
+    // এন্ট্রি যোগের সময় — ১২ ঘণ্টার বাংলা সময় (যেমন ১২:১৫ pm)।
+    // সময় না থাকলে (আগের এন্ট্রি) ফাঁকা ফেরত দেয়, ভুল সময় দেখায় না।
+    function fmtEntryTime(ts) {
+      var ms = Math.round(+ts);
+      if (!isFinite(ms) || ms <= 0) return '';
+      var d = new Date(ms);
+      if (isNaN(d.getTime())) return '';
+      var h = d.getHours(), m = d.getMinutes();
+      var ap = h >= 12 ? 'pm' : 'am';
+      var h12 = h % 12; if (h12 === 0) h12 = 12;
+      return toBnDigits(pad2(h12) + ':' + pad2(m)) + ' ' + ap;
+    }
+    // মেটা লাইনের তারিখ+সময়: পুরো তারিখের ক্ষেত্রে তারিখ (আর সময়
+    // থাকলে তারিখ+সময়) একসঙ্গে অটুট থাকে — লাইন ভাঙলে পুরোটা নিচের
+    // লাইনে নামে, তারিখ মাঝখানে ভাঙে না ("১২ নভেম্বর",
+    // "১৯ নভেম্বর · ০৮:১৭ pm")। ফোন ও ল্যাপটপ দুটোতেই প্রযোজ্য।
+    function metaDateTime(ds, t) {
+      var label = dayLabel(ds);
+      if (!t) {
+        var j = label.indexOf(', ');
+        if (j === -1) return escapeHtml(label);
+        return escapeHtml(label.slice(0, j + 1)) + ' <span class="e-time">' + escapeHtml(label.slice(j + 2)) + '</span>';
+      }
+      var i = label.indexOf(', ');
+      if (i === -1) return escapeHtml(label) + ' <span class="e-time">· ' + escapeHtml(t) + '</span>';
+      return escapeHtml(label.slice(0, i + 1)) + ' <span class="e-time">' + escapeHtml(label.slice(i + 2)) + ' · ' + escapeHtml(t) + '</span>';
+    }
     // চলতি সপ্তাহ: রবিবার থেকে শনিবার
     function weekRange() {
       var now = new Date(); now.setHours(0, 0, 0, 0);
@@ -1887,7 +1945,7 @@
      'ghPassInput', 'ghPassSaveBtn', 'ghPassClearBtn', 'ghPassStatus', 'ghSyncStatus', 'ghStatus',
      'ghNameInput', 'ghNameSaveBtn', 'ghNameClearBtn', 'ghNameStatus',
      'ghMinToggle', 'backupPanel', 'ghSettingsBody',
-     'historyTitle', 'historyTitleText', 'dailyBtn', 'dailyBackBtn', 'histViewList', 'histViewDaily',
+     'historyTitle', 'historyTitleText', 'timeToggle', 'timeToggleYes', 'timeToggleNo', 'dailyBtn', 'dailyBackBtn', 'histViewList', 'histViewDaily',
      'dailyRows', 'dailyMonthTitle', 'dailyMonthTotal'
     ].forEach(function (id) { els[id] = $(id); });
 
@@ -3183,7 +3241,7 @@
 
     /* ---------- এন্ট্রি যোগ/সম্পাদনা/মুছে ফেলা ---------- */
     function addEntry(data) {
-      var e = { id: state.nextId++, type: data.type, poisha: data.poisha, category: data.category, desc: data.desc || data.category, date: data.date || todayStr() };
+      var e = { id: state.nextId++, type: data.type, poisha: data.poisha, category: data.category, desc: data.desc || data.category, date: data.date || todayStr(), createdAt: Date.now() };
       state.entries.push(e);
       markChanged();
       renderAll();
@@ -3288,6 +3346,11 @@
       for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
       return true;
     }
+    // ---------- হিস্টোরিতে সময় দেখানো/লুকানো (v93) ----------
+    // শুধু true হলেই দেখায়; বাকি সবকিছু (না থাকা, ভুল মান) = বন্ধ।
+    // সময় সবসময় সংরক্ষিত হয় (createdAt) — এই সেটিং শুধু দেখানো নিয়ন্ত্রণ করে।
+    var SHOW_ENTRY_TIME_KEY = 'khorochpotro_show_entry_time';
+    function sanitizeShowEntryTime(v) { return v === true; }
     function dayOfMonthLabel(ym, d) {
       var p = String(ym).split('-');
       return fmtNum0.format(d) + ' ' + MONTH_NAMES_BN[(+p[1]) - 1];
@@ -3746,8 +3809,9 @@
       } else {
         var ehtml = catHtml + '<div class="modal-sec">এন্ট্রিগুলো</div>';
         sorted.forEach(function (e) {
+          var mt = fmtEntryTime(e.createdAt);
           ehtml += '<div class="modal-entry" data-hl-type="' + e.type + '" data-hl-cat="' + escapeHtml(e.category) + '"><span class="m-desc">' + escapeHtml(e.desc) +
-            '<span class="m-meta">' + escapeHtml(e.category) + ' · ' + escapeHtml(dayLabel(e.date)) + '</span></span>' +
+            '<span class="m-meta">' + escapeHtml(e.category) + ' · ' + metaDateTime(e.date, state.showEntryTime ? mt : '') + '</span></span>' +
             '<span class="m-amt ' + e.type + '">' + (e.type === 'income' ? '+' : '−') + fmtMoney(e.poisha) + '</span></div>';
         });
         els.periodModalEntries.innerHTML = ehtml;
@@ -3897,10 +3961,11 @@
           groupsHtml += flushHead();
           groupOpen = true;
         }
+        var et = fmtEntryTime(e.createdAt);
         groupsHtml += '<div class="entry ' + e.type + '">' +
           '<span class="e-ico">' + (e.type === 'income' ? ICON_UP : ICON_DOWN) + '</span>' +
           '<div class="e-main"><div class="e-desc">' + escapeHtml(e.desc) + '</div>' +
-          '<div class="e-meta"><span class="e-cat-ico" style="color:' + catColor(e.category) + '">' + catIcon(e.category) + '</span>' + escapeHtml(e.category) + ' · ' + escapeHtml(dayLabel(e.date)) + '</div></div>' +
+          '<div class="e-meta"><span class="e-cat-ico" style="color:' + catColor(e.category) + '">' + catIcon(e.category) + '</span>' + escapeHtml(e.category) + ' · ' + metaDateTime(e.date, state.showEntryTime ? et : '') + '</div></div>' +
           '<span class="e-amt">' + (e.type === 'income' ? '+' : '−') + fmtMoney(e.poisha) + '</span>' +
           '<span class="e-actions">' +
           '<button class="icon-btn" type="button" data-action="edit" data-id="' + e.id + '" aria-label="সম্পাদনা করুন">' + ICON_EDIT + '</button>' +
@@ -3938,7 +4003,7 @@
     /* ফন্ট লোড শেষে সারির উচ্চতা বদলাতে পারে — তখন আবার মেপে নেওয়া */
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitEntryList);
 
-    function renderAll() { buildMonthOptions(); renderSummary(); renderBudget(); renderList(); renderDaily(); updateMonthStepper(); }
+    function renderAll() { buildMonthOptions(); renderSummary(); renderBudget(); renderList(); renderDaily(); updateMonthStepper(); renderTimeToggle(); }
 
     /* ---------- ডেইলি খরচ: নির্বাচিত মাসের প্রতিদিনের মোট খরচ ----------
        শুধু খরচ (জমা নয়), আসল এন্ট্রি (state.entries) থেকে হিসাব —
@@ -4040,6 +4105,24 @@
       els.categorySelect.innerHTML = cats.map(function (c) { return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('');
       if (keepCategory && cats.indexOf(cur) !== -1) els.categorySelect.value = cur;
     }
+    /* ---------- হিস্টোরিতে সময় দেখানো/লুকানো (v93) ----------
+       সময় সবসময় সংরক্ষিত হয় (createdAt) — টগল শুধু দেখানো
+       নিয়ন্ত্রণ করে। প্রথমবার বন্ধ (ব্লক) থাকে; একবার বদলালে
+       সেটিং সংরক্ষিত হয় আর এনক্রিপ্টেড ব্যাকআপে অন্য ডিভাইসেও যায়। */
+    function renderTimeToggle() {
+      if (!els.timeToggle) return;
+      els.timeToggleYes.setAttribute('aria-pressed', state.showEntryTime ? 'true' : 'false');
+      els.timeToggleNo.setAttribute('aria-pressed', state.showEntryTime ? 'false' : 'true');
+      els.timeToggle.classList.toggle('on', state.showEntryTime);
+    }
+    function setShowEntryTime(on) {
+      on = !!on;
+      if (state.showEntryTime === on) { return; }
+      state.showEntryTime = on;
+      renderTimeToggle();
+      renderList();
+      markChanged();
+    }
     function cancelEdit() {
       state.editingId = null;
       if (els.entryFormPanel) els.entryFormPanel.classList.remove('editing-flash');
@@ -4081,8 +4164,10 @@
         panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-    els.segExpense.addEventListener('click', function () { setFormType('expense', true); });
-    els.segIncome.addEventListener('click', function () { setFormType('income', true); });
+    els.segExpense.addEventListener('click', function () { if (state.formType === 'expense') return; setFormType('expense', true); });
+    els.segIncome.addEventListener('click', function () { if (state.formType === 'income') return; setFormType('income', true); });
+    els.timeToggleYes.addEventListener('click', function () { setShowEntryTime(true); });
+    els.timeToggleNo.addEventListener('click', function () { setShowEntryTime(false); });
     els.cancelEditBtn.addEventListener('click', cancelEdit);
     els.amountInput.addEventListener('input', function () { els.amountField.classList.remove('invalid'); });
     els.entryForm.addEventListener('submit', function (ev) {
@@ -5755,7 +5840,10 @@
         seen[id] = true;
         if (id > maxId) maxId = id;
         var cat = String(e.category || 'অন্যান্য').slice(0, 60) || 'অন্যান্য';
-        out.push({ id: id, type: e.type, poisha: poisha, category: cat, desc: String(e.desc || cat).slice(0, 120), date: date });
+        var entry = { id: id, type: e.type, poisha: poisha, category: cat, desc: String(e.desc || cat).slice(0, 120), date: date };
+        var createdAt = Math.round(+e.createdAt);
+        if (isFinite(createdAt) && createdAt > 0) entry.createdAt = createdAt;
+        out.push(entry);
       });
       var budgets = {};
       if (data.budgets && typeof data.budgets === 'object') {
@@ -5768,7 +5856,9 @@
       var avgExclude = sanitizeAvgExclude(data.avgExclude);
       // গড় থেকে বাদ দেওয়া দিন — শুধু ১..৩১ নম্বরই বৈধ, বাকি বাদ (v84)
       var avgExcludeDays = sanitizeAvgExcludeDays(data.avgExcludeDays);
-      return { entries: out, budgets: budgets, avgExclude: avgExclude, avgExcludeDays: avgExcludeDays, nextId: maxId + 1 };
+      // হিস্টোরিতে সময় দেখানো — শুধু true হলেই দেখায় (v93)
+      var showEntryTime = sanitizeShowEntryTime(data.showEntryTime);
+      return { entries: out, budgets: budgets, avgExclude: avgExclude, avgExcludeDays: avgExcludeDays, showEntryTime: showEntryTime, nextId: maxId + 1 };
     }
 
     /* ============================================================
@@ -5792,6 +5882,7 @@
       baseBudgets: {},      // ওই ব্যাকআপের বাজেট
       baseAvgExclude: [],   // ওই ব্যাকআপের গড়-থেকে-বাদ ক্যাটাগরি (v79)
       baseAvgExcludeDays: [], // ওই ব্যাকআপের গড়-থেকে-বাদ দিন (v84)
+      baseShowEntryTime: false, // ওই ব্যাকআপের সময়-দেখানোর সেটিং (v93)
       baseEntries: {}       // ওই ব্যাকআপের এন্ট্রিগুলোর অনুলিপি (id -> এন্ট্রি) —
                             // অন্য ডিভাইসে মোছা এন্ট্রি চেনার জন্য লাগে
     };
@@ -5799,12 +5890,13 @@
     function saveLocal() {
       try {
         localStorage.setItem(LOCAL_KEY, JSON.stringify({
-          entries: state.entries, budgets: state.budgets, avgExclude: state.avgExclude, avgExcludeDays: state.avgExcludeDays, nextId: state.nextId, meta: syncMeta
+          entries: state.entries, budgets: state.budgets, avgExclude: state.avgExclude, avgExcludeDays: state.avgExcludeDays, showEntryTime: state.showEntryTime, nextId: state.nextId, meta: syncMeta
         }));
         // আলাদা পরিষ্কার চাবিতেও — পুরনো সংরক্ষণ/ব্যাকআপে avgExclude
         // না থাকলেও বাছাইটা যেন হারিয়ে না যায় (v79)
         localStorage.setItem(AVG_EXCLUDE_KEY, JSON.stringify(state.avgExclude));
         localStorage.setItem(AVG_EXCLUDE_DAYS_KEY, JSON.stringify(state.avgExcludeDays));
+        localStorage.setItem(SHOW_ENTRY_TIME_KEY, JSON.stringify(state.showEntryTime));
       } catch (e) {}
     }
     function loadLocal() {
@@ -5826,6 +5918,11 @@
         function readAvgExcludeDaysFallback() {
           try { return JSON.parse(localStorage.getItem(AVG_EXCLUDE_DAYS_KEY) || '[]'); } catch (e) { return []; }
         }
+        // সময় দেখানোর সেটিং — মূল সংরক্ষণে না থাকলে (পুরনো সংরক্ষণ) আলাদা চাবি থেকে; দুটোতেই না থাকলে বন্ধ
+        state.showEntryTime = (typeof d.showEntryTime === 'boolean') ? d.showEntryTime : sanitizeShowEntryTime(readShowEntryTimeFallback());
+        function readShowEntryTimeFallback() {
+          try { return JSON.parse(localStorage.getItem(SHOW_ENTRY_TIME_KEY) || 'false'); } catch (e) { return false; }
+        }
         state.nextId = Math.max(clean.nextId, Math.round(+d.nextId) || 0);
         if (d.meta && typeof d.meta === 'object') {
           syncMeta.updatedAt = d.meta.updatedAt || null;
@@ -5836,6 +5933,7 @@
           syncMeta.baseBudgets = (d.meta.baseBudgets && typeof d.meta.baseBudgets === 'object') ? d.meta.baseBudgets : {};
           syncMeta.baseAvgExclude = sanitizeAvgExclude(d.meta.baseAvgExclude);
           syncMeta.baseAvgExcludeDays = sanitizeAvgExcludeDays(d.meta.baseAvgExcludeDays);
+          syncMeta.baseShowEntryTime = sanitizeShowEntryTime(d.meta.baseShowEntryTime);
           syncMeta.baseEntries = (d.meta.baseEntries && typeof d.meta.baseEntries === 'object') ? d.meta.baseEntries : {};
         }
       } catch (e) {}
@@ -5956,7 +6054,11 @@
     }
     function entrySnapshotMap(list) {
       var m = {};
-      list.forEach(function (e) { m[e.id] = { id: e.id, type: e.type, poisha: e.poisha, category: e.category, desc: e.desc, date: e.date }; });
+      list.forEach(function (e) {
+        var s = { id: e.id, type: e.type, poisha: e.poisha, category: e.category, desc: e.desc, date: e.date };
+        if (e.createdAt) s.createdAt = e.createdAt;
+        m[e.id] = s;
+      });
       return m;
     }
     function setBaseFromCurrent(stamp) {
@@ -5965,6 +6067,7 @@
       syncMeta.baseBudgets = JSON.parse(JSON.stringify(state.budgets));
       syncMeta.baseAvgExclude = state.avgExclude.slice();
       syncMeta.baseAvgExcludeDays = state.avgExcludeDays.slice();
+      syncMeta.baseShowEntryTime = state.showEntryTime;
       syncMeta.baseEntries = entrySnapshotMap(state.entries);
     }
     // দূরের ব্যাকআপের বিষয়বস্তু base-এর অনুলিপির সঙ্গে হুবহু এক
@@ -5987,6 +6090,8 @@
       // শুধু বাদ-ক্যাটাগরি বদলালেও ব্যাকআপটা base-এর মতো নয় — মেলাতে হবে
       if (!avgExcludeEquals(syncMeta.baseAvgExclude, clean.avgExclude)) return false;
       if (!avgExcludeDaysEquals(syncMeta.baseAvgExcludeDays, clean.avgExcludeDays)) return false;
+      // সময়-দেখানোর সেটিং বদলালেও ব্যাকআপটা base-এর মতো নয় — মেলাতে হবে
+      if (syncMeta.baseShowEntryTime !== clean.showEntryTime) return false;
       return true;
     }
     // অন্য ডিভাইসের ব্যাকআপের সঙ্গে স্থানীয় হিসাব মেলানো:
@@ -6083,7 +6188,9 @@
         var local = null;
         state.entries.forEach(function (e) { if (e.id === re.id) local = e; });
         if (local && (local.type !== re.type || local.poisha !== re.poisha || local.date !== re.date || local.category !== re.category || local.desc !== re.desc)) {
-          state.entries.push({ id: state.nextId++, type: re.type, poisha: re.poisha, category: re.category, desc: re.desc, date: re.date });
+          var ce = { id: state.nextId++, type: re.type, poisha: re.poisha, category: re.category, desc: re.desc, date: re.date };
+          if (re.createdAt) ce.createdAt = re.createdAt;
+          state.entries.push(ce);
           changed = true;
         }
       });
@@ -6115,6 +6222,15 @@
           state.avgExcludeDays = clean.avgExcludeDays.slice(); changed = true;
         }
       }
+      // হিস্টোরিতে সময় দেখানো — বাদ-ক্যাটাগরির মতোই: এখানে base থেকে
+      // বদলানো না হলে দূরের সেটিংটাই বসে। পুরনো ব্যাকআপে
+      // (showEntryTime চাবি নেই) কিছুই বদলায় না — স্থানীয় সেটিং অক্ষত থাকে।
+      if (remote.data && 'showEntryTime' in remote.data) {
+        var localTimeChanged = state.showEntryTime !== syncMeta.baseShowEntryTime;
+        if (!localTimeChanged && state.showEntryTime !== clean.showEntryTime) {
+          state.showEntryTime = clean.showEntryTime; changed = true;
+        }
+      }
       // ব্যাকআপের লার্নিংও মেলানো হয় — অন্য ডিভাইসে শেখা
       // সংশোধন এখানে আসে, এখানকার নতুন শেখা হারায় না।
       if (mergeLearningFromBackup(remote.data && remote.data.learning)) changed = true;
@@ -6124,6 +6240,7 @@
       syncMeta.baseBudgets = clean.budgets;
       syncMeta.baseAvgExclude = clean.avgExclude.slice();
       syncMeta.baseAvgExcludeDays = clean.avgExcludeDays.slice();
+      syncMeta.baseShowEntryTime = clean.showEntryTime;
       syncMeta.baseEntries = entrySnapshotMap(clean.entries);
       if (changed) {
         syncMeta.updatedAt = new Date().toISOString();
@@ -6143,6 +6260,7 @@
       state.budgets = clean.budgets;
       state.avgExclude = clean.avgExclude.slice();
       state.avgExcludeDays = clean.avgExcludeDays.slice();
+      state.showEntryTime = clean.showEntryTime;
       state.nextId = clean.nextId;
       // ব্যাকআপের লার্নিংও ফেরানো হয় — নতুন ডিভাইসে হিসাবের
       // সঙ্গে শেখা সংশোধনগুলোও ফিরে আসে।
@@ -6152,6 +6270,7 @@
       syncMeta.baseBudgets = clean.budgets;
       syncMeta.baseAvgExclude = clean.avgExclude.slice();
       syncMeta.baseAvgExcludeDays = clean.avgExcludeDays.slice();
+      syncMeta.baseShowEntryTime = clean.showEntryTime;
       syncMeta.baseEntries = entrySnapshotMap(clean.entries);
       syncMeta.updatedAt = remote.updatedAt || new Date().toISOString();
       syncMeta.pendingSync = false;
@@ -6168,7 +6287,7 @@
     }
     function pushBackup(sha, isRetry) {
       var stamp = syncMeta.updatedAt || new Date().toISOString();
-      var inner = { entries: state.entries, budgets: state.budgets, avgExclude: state.avgExclude, avgExcludeDays: state.avgExcludeDays, updatedAt: stamp, learning: learnSnapshot() };
+      var inner = { entries: state.entries, budgets: state.budgets, avgExclude: state.avgExclude, avgExcludeDays: state.avgExcludeDays, showEntryTime: state.showEntryTime, updatedAt: stamp, learning: learnSnapshot() };
       return encryptBackupData(inner).then(function (enc) {
         var wrapper = {
           app: 'khorochpotro', version: 2, encrypted: true, updatedAt: stamp,
