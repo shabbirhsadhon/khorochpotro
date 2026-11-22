@@ -2082,10 +2082,10 @@
       if (i === -1) return escapeHtml(label) + ' <span class="e-time">· ' + escapeHtml(t) + '</span>';
       return escapeHtml(label.slice(0, i + 1)) + ' <span class="e-time">' + escapeHtml(label.slice(i + 2)) + ' · ' + escapeHtml(t) + '</span>';
     }
-    // চলতি সপ্তাহ: রবিবার থেকে শনিবার
+    // চলতি সপ্তাহ: শনিবার থেকে শুক্রবার (বাংলাদেশের সপ্তাহ) — v96
     function weekRange() {
       var now = new Date(); now.setHours(0, 0, 0, 0);
-      var start = new Date(now); start.setDate(now.getDate() - now.getDay());
+      var start = new Date(now); start.setDate(now.getDate() - ((now.getDay() + 1) % 7));
       var end = new Date(start); end.setDate(start.getDate() + 6);
       return { start: dateStr(start), end: dateStr(end) };
     }
