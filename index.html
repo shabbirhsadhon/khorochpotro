@@ -6035,6 +6035,15 @@
       while (s.length > 1 && ctx.measureText(s + '…').width > maxW) s = s.slice(0, -1);
       return s + '…';
     }
+    // v98: তারিখের পাশে সময় + দিনভিত্তিক হালকা পটভূমি (পিডিএফ)
+    function pdfDateLabel(ds) {
+      var d = parseDateLocal(ds);
+      return fmtNum0.format(d.getDate()) + ' ' + MONTH_NAMES_BN[d.getMonth()];
+    }
+    function pdfDateTime(e) {
+      var t = fmtEntryTime(e.createdAt);
+      return pdfDateLabel(e.date) + (t ? ' · ' + t : '');
+    }
     function generateMonthlyPdf() {
       var ym = state.selectedMonth;
       var list = filterBy(state.entries, function (e) { return monthOf(e.date) === ym; })
@@ -6051,7 +6060,7 @@
       var W = 1240, H = 1754, S = 2;
       var pages = [], canvas = null, ctx = null, y = 0;
       var FONT = '"Noto Sans Bengali","Hind Siliguri","Inter",sans-serif';
-      var X = { date: 60, cat: 250, desc: 480, incR: 1000, expR: 1180 };
+      var X = { date: 60, cat: 320, desc: 560, incR: 1000, expR: 1180 };
       function tableHeader() {
         ctx.fillStyle = '#0b6e4f';
         ctx.fillRect(50, y - 34, W - 100, 48);
@@ -6103,10 +6112,19 @@
         ctx.fillText('এই মাসে কোনো এন্ট্রি নেই।', X.date, y + 10);
         y += 50;
       }
+      var pdfPrevDate = null, pdfDayIdx = -1, pdfFirstRow = true;
       list.forEach(function (e) {
-        if (y > H - 130) { pages.push({ bytes: canvasToJpegBytes(canvas), w: W * S, h: H * S }); newPage(false); ctx.font = '400 25px ' + FONT; }
+        if (y > H - 130) { pages.push({ bytes: canvasToJpegBytes(canvas), w: W * S, h: H * S }); newPage(false); ctx.font = '400 25px ' + FONT; pdfFirstRow = true; }
+        if (e.date !== pdfPrevDate) { pdfPrevDate = e.date; pdfDayIdx++; }
+        if (pdfDayIdx % 2 === 1) {
+          ctx.fillStyle = '#e9f2ec';
+          var pdfBandY = pdfFirstRow ? y - 30 : y - 36;
+          var pdfBandH = pdfFirstRow ? 44 : 50;
+          ctx.fillRect(50, pdfBandY, W - 100, pdfBandH);
+        }
+        pdfFirstRow = false;
         ctx.fillStyle = '#14201b';
-        ctx.fillText(toBnDigits(e.date), X.date, y);
+        ctx.fillText(pdfDateTime(e), X.date, y);
         ctx.fillText(fitCanvasText(ctx, e.category, 210), X.cat, y);
         ctx.fillText(fitCanvasText(ctx, e.desc, 300), X.desc, y);
         ctx.textAlign = 'right';
