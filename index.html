@@ -3498,8 +3498,8 @@
       var maxDaily = (daysLeft > 0 && bal > 0) ? Math.round(bal / daysLeft) : 0;
       els.avgDailyVal.textContent = fmtMoney(maxDaily);
       els.avgDailySub.textContent = daysLeft > 0
-        ? 'বাকি ' + bnInt(daysLeft) + ' দিন · ব্যালান্স ' + fmtMoney(bal)
-        : 'আজ মাসের শেষ দিন · ব্যালান্স ' + fmtMoney(bal);
+        ? 'বাকি ' + bnInt(daysLeft) + ' দিন'
+        : 'আজ মাসের শেষ দিন';
       els.budgetMonthLbl.textContent = monthLabel(ym);
     }
 
