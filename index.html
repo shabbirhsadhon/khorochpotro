@@ -573,6 +573,49 @@
       .cal-day.sel { background: var(--primary); color: var(--on-primary); font-weight: 600; box-shadow: var(--shadow-sm); }
       .cal-blank { aspect-ratio: 1 / 1; }
       .cal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+      /* ---------- ক্যালেন্ডার পপআপে সময় বাছুন (v99) ----------
+         "সময় বাছুন" বাটন হেডারের ডান পাশে; ঘড়ির মুখ ক্যালেন্ডারের
+         জায়গা নেয়, "আজ"/"বাতিল" নিচে আগের মতোই থাকে। */
+      .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .cal-time-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+      .cal-time-btn svg { width: 15px; height: 15px; }
+      .cal-time-btn[hidden] { display: none; }
+      .cal-clock { padding: 2px 0 0; }
+      .clock-face {
+        position: relative; width: 240px; height: 240px; max-width: 100%; margin: 4px auto 10px;
+        border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line);
+        touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer;
+      }
+      .clock-num {
+        position: absolute; transform: translate(-50%, -50%);
+        font-family: "Atma", "Noto Sans Bengali", "Hind Siliguri", sans-serif; font-size: 17px; font-weight: 600; color: var(--ink-2);
+      }
+      .clock-hand {
+        position: absolute; left: 50%; bottom: 50%; transform-origin: 50% 100%;
+        background: var(--primary-strong); border-radius: 99px;
+        transition: transform .3s cubic-bezier(.45, 0, .2, 1);
+      }
+      .clock-hand.no-anim { transition: none; }
+      .clock-hour { width: 5px; height: 62px; }
+      .clock-min { width: 3.5px; height: 90px; }
+      .clock-pin {
+        position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+        border-radius: 50%; background: var(--primary-strong);
+      }
+      .clock-digital {
+        text-align: center; font-family: "Atma", "Noto Sans Bengali", "Hind Siliguri", sans-serif;
+        font-weight: 600; font-size: 22px; color: var(--primary-strong); margin-bottom: 10px;
+      }
+      .clock-edit { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px; }
+      .clock-num-in {
+        width: 54px; text-align: center; font-size: 16px; font-weight: 700; color: var(--ink);
+        background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px;
+      }
+      .clock-num-in:focus { outline: none; border-color: var(--primary); }
+      .clock-colon { font-size: 18px; font-weight: 700; color: var(--ink-2); }
+      .clock-ap { margin: 0; width: 110px; flex: none; }
+      .clock-ap button { min-height: 36px; padding: 6px 8px; font-size: 14px; }
+      .seg.pm .seg-thumb { transform: translateX(calc(100% + 4px)); }
       @media (prefers-reduced-motion: reduce) {
         .cal-backdrop, .cal-panel { transition: none; }
       }
@@ -3438,7 +3481,10 @@
 
     /* ---------- এন্ট্রি যোগ/সম্পাদনা/মুছে ফেলা ---------- */
     function addEntry(data) {
-      var e = { id: state.nextId++, type: data.type, poisha: data.poisha, category: data.category, desc: data.desc || data.category, date: data.date || todayStr(), createdAt: Date.now() };
+      // createdAt দিলে সেটাই থাকে (ম্যানুয়াল: বাছা তারিখ + বাছা সময়);
+      // না দিলে এখনকার সময় — ভয়েস ও ধারের লিংক এন্ট্রি আগের মতোই।
+      var ca = Math.round(+data.createdAt);
+      var e = { id: state.nextId++, type: data.type, poisha: data.poisha, category: data.category, desc: data.desc || data.category, date: data.date || todayStr(), createdAt: (isFinite(ca) && ca > 0) ? ca : Date.now() };
       state.entries.push(e);
       markChanged();
       renderAll();
@@ -4847,6 +4893,7 @@
       els.submitBtn.textContent = 'যোগ করুন';
       els.cancelEditBtn.style.display = 'none';
       els.entryForm.reset();
+      resetFormTime();
       els.dateInput.value = todayStr();
       els.amountField.classList.remove('invalid');
       setFormType('expense');
@@ -4860,6 +4907,9 @@
       var taka = Math.floor(e.poisha / 100), p = e.poisha % 100;
       els.amountInput.value = fmtNum0.format(taka) + (p ? '.' + pad2(p) : '');
       els.descInput.value = e.desc;
+      // সম্পাদনায় ঘড়িটা এন্ট্রির আগের সময় থেকেই শুরু হয়, যাতে
+      // শুধু তারিখ বদলালে সময় হারিয়ে না যায়।
+      setFormTimeFromDate(new Date(e.createdAt));
       els.dateInput.value = e.date;
       els.formTitle.textContent = 'এন্ট্রি সম্পাদনা করুন';
       els.submitBtn.textContent = 'সংরক্ষণ করুন';
@@ -4902,11 +4952,12 @@
         poisha: poisha,
         category: els.categorySelect.value || 'অন্যান্য',
         desc: (els.descInput.value || '').trim() || els.categorySelect.value || 'অন্যান্য',
-        date: date
+        date: date,
+        createdAt: formTimeMs(date)
       };
       if (state.editingId != null) {
         var e = findEntry(state.editingId);
-        if (e) { e.type = data.type; e.poisha = data.poisha; e.category = data.category; e.desc = data.desc; e.date = data.date; }
+        if (e) { e.type = data.type; e.poisha = data.poisha; e.category = data.category; e.desc = data.desc; e.date = data.date; e.createdAt = data.createdAt; }
         var keepType = data.type, keepCat = data.category;
         cancelEdit();
         setFormType(keepType); els.categorySelect.value = keepCat;
@@ -4917,6 +4968,7 @@
         addEntry(data);
         var keepT = data.type, keepC = data.category;
         els.entryForm.reset();
+        resetFormTime();
         els.dateInput.value = todayStr();
         setFormType(keepT); els.categorySelect.value = keepC;
         showToast((data.type === 'income' ? 'জমা' : 'খরচ') + ' যোগ হয়েছে: ' + fmtMoney(data.poisha) + ' (' + data.category + ')');
@@ -5869,6 +5921,28 @@
     var CAL_CHEV_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
     var CAL_CHEV_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
     var calEls = null, calTarget = null, calView = null, calSelected = '';
+    var CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+    // ম্যানুয়াল এন্ট্রির বাছা সময় (v99) — ঘণ্টা 0–23, মিনিট 0–59।
+    // ক্যালেন্ডার পপআপের ঘড়ি এই সময়টাই বদলায়; ম্যানুয়াল এন্ট্রির
+    // createdAt = বাছা তারিখ + বাছা সময় (Date.now() নয়)। ফর্ম খোলা
+    // থাকতে সময় বদলায় না; নতুন এন্ট্রির জন্য আবার বর্তমান সময়ে ফেরে।
+    var formTime = null;
+    var calMode = 'date';      // 'date' = ক্যালেন্ডার, 'time' = ঘড়ি
+    var calWithTime = false;   // শুধু ম্যানুয়াল এন্ট্রির তারিখের ঘরেই ঘড়ি থাকে
+    function ensureFormTime() {
+      if (!formTime) { var n = new Date(); formTime = { h: n.getHours(), m: n.getMinutes() }; }
+      return formTime;
+    }
+    function resetFormTime() { var n = new Date(); formTime = { h: n.getHours(), m: n.getMinutes() }; }
+    function setFormTimeFromDate(d) {
+      if (d && isFinite(d.getTime())) formTime = { h: d.getHours(), m: d.getMinutes() };
+      else resetFormTime();
+    }
+    function formTimeMs(iso) {
+      ensureFormTime();
+      var p = String(iso).split('-');
+      return new Date(+p[0], +p[1] - 1, +p[2], formTime.h, formTime.m).getTime();
+    }
     function buildCalendar() {
       if (calEls) return calEls;
       var bd = document.createElement('div');
@@ -5876,8 +5950,12 @@
       bd.hidden = true;
       bd.innerHTML =
         '<div class="cal-panel" role="dialog" aria-modal="true" aria-label="তারিখ বাছুন">' +
-          '<div class="cal-kicker">তারিখ বাছুন</div>' +
+          '<div class="cal-head">' +
+            '<div class="cal-kicker" id="calKicker">তারিখ বাছুন</div>' +
+            '<button type="button" class="btn btn-tonal btn-sm cal-time-btn" id="calTimeBtn" hidden>' + CLOCK_SVG + '<span>সময় বাছুন</span></button>' +
+          '</div>' +
           '<div class="cal-title" id="calTitle"></div>' +
+          '<div id="calBody">' +
           '<div class="cal-nav">' +
             '<button type="button" class="cal-nav-btn" id="calPrev" aria-label="আগের মাস">' + CAL_CHEV_L + '</button>' +
             '<div class="cal-month" id="calMonthLbl"></div>' +
@@ -5885,6 +5963,26 @@
           '</div>' +
           '<div class="cal-week"><span>রবি</span><span>সোম</span><span>মঙ্গল</span><span>বুধ</span><span>বৃহ</span><span>শুক্র</span><span>শনি</span></div>' +
           '<div class="cal-grid" id="calGrid"></div>' +
+          '</div>' +
+          '<div class="cal-clock" id="calClock" hidden>' +
+            '<div class="clock-face" id="clockFace" role="slider" aria-label="সময় বাছুন">' +
+              '<div class="clock-nums" id="clockNums"></div>' +
+              '<div class="clock-hand clock-hour" id="clockHourHand"></div>' +
+              '<div class="clock-hand clock-min" id="clockMinHand"></div>' +
+              '<div class="clock-pin"></div>' +
+            '</div>' +
+            '<div class="clock-digital" id="clockDigital"></div>' +
+            '<div class="clock-edit">' +
+              '<input type="text" inputmode="numeric" autocomplete="off" class="clock-num-in" id="clockHourIn" aria-label="ঘণ্টা" maxlength="2" />' +
+              '<span class="clock-colon">:</span>' +
+              '<input type="text" inputmode="numeric" autocomplete="off" class="clock-num-in" id="clockMinIn" aria-label="মিনিট" maxlength="2" />' +
+              '<div class="seg clock-ap" id="clockApSeg" role="group" aria-label="am / pm">' +
+                '<span class="seg-thumb" aria-hidden="true"></span>' +
+                '<button type="button" data-ap="am" aria-pressed="true">am</button>' +
+                '<button type="button" data-ap="pm" aria-pressed="false">pm</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
           '<div class="cal-foot">' +
             '<button type="button" class="btn btn-tonal btn-sm" id="calTodayBtn">আজ</button>' +
             '<button type="button" class="btn btn-outline btn-sm" id="calCancelBtn">বাতিল</button>' +
@@ -5893,7 +5991,19 @@
       document.body.appendChild(bd);
       calEls = {
         bd: bd,
+        kicker: bd.querySelector('#calKicker'),
+        timeBtn: bd.querySelector('#calTimeBtn'),
         title: bd.querySelector('#calTitle'),
+        body: bd.querySelector('#calBody'),
+        clock: bd.querySelector('#calClock'),
+        face: bd.querySelector('#clockFace'),
+        nums: bd.querySelector('#clockNums'),
+        hourHand: bd.querySelector('#clockHourHand'),
+        minHand: bd.querySelector('#clockMinHand'),
+        digital: bd.querySelector('#clockDigital'),
+        hourIn: bd.querySelector('#clockHourIn'),
+        minIn: bd.querySelector('#clockMinIn'),
+        apSeg: bd.querySelector('#clockApSeg'),
         month: bd.querySelector('#calMonthLbl'),
         grid: bd.querySelector('#calGrid')
       };
@@ -5902,6 +6012,9 @@
       bd.querySelector('#calNext').addEventListener('click', function () { shiftCalMonth(1); });
       bd.querySelector('#calTodayBtn').addEventListener('click', function () { pickCalDate(todayStr()); });
       bd.querySelector('#calCancelBtn').addEventListener('click', function () { closeCalendar(); });
+      calEls.timeBtn.addEventListener('click', function () { setCalMode(calMode === 'time' ? 'date' : 'time'); });
+      buildClockNums();
+      wireClock();
       calEls.grid.addEventListener('click', function (ev) {
         var b = ev.target && ev.target.closest ? ev.target.closest('[data-iso]') : null;
         if (b) pickCalDate(b.getAttribute('data-iso'));
@@ -5911,7 +6024,7 @@
     function renderCalendar() {
       var c = buildCalendar();
       var y = calView.getFullYear(), m = calView.getMonth();
-      c.title.textContent = validDateStr(calSelected) ? fmtDateFieldFull(calSelected) : '';
+      updateCalTitle();
       c.month.textContent = MONTH_NAMES_BN[m] + ' ' + bnYear(y);
       var startDay = new Date(y, m, 1).getDay();
       var days = new Date(y, m + 1, 0).getDate();
@@ -5928,9 +6041,17 @@
     function openDateCalendar(input) {
       buildCalendar();
       calTarget = input;
+      calWithTime = !!(input && input._withTime);
+      calMode = 'date';
+      if (calWithTime) ensureFormTime();
       calSelected = validDateStr(input.value) ? input.value : todayStr();
       calView = parseDateLocal(calSelected);
       calView.setDate(1);
+      calEls.timeBtn.hidden = !calWithTime;
+      calEls.kicker.textContent = 'তারিখ বাছুন';
+      calEls.timeBtn.querySelector('span').textContent = 'সময় বাছুন';
+      calEls.body.hidden = false;
+      calEls.clock.hidden = true;
       renderCalendar();
       calEls.bd.hidden = false;
       requestAnimationFrame(function () { if (calEls) calEls.bd.classList.add('open'); });
@@ -5939,6 +6060,9 @@
       if (!calEls) return;
       calEls.bd.classList.remove('open');
       calEls.bd.hidden = true;
+      // শুধু সময় বদলে (তারিখ না বেছে) বন্ধ করলেও ম্যানুয়াল ঘরের
+      // দেখানো লেখাটা নতুন সময়ে ফেরে — একই মান আবার বসালে paint() চলে।
+      if (calTarget && calTarget._withTime) { try { calTarget.value = calTarget.value; } catch (e) {} }
       calTarget = null;
     }
     function pickCalDate(iso) {
@@ -5952,18 +6076,140 @@
       calView = new Date(calView.getFullYear(), calView.getMonth() + delta, 1);
       renderCalendar();
     }
+    // পপআপের বড় শিরোনাম: বাছা তারিখ + (ম্যানুয়াল ঘর হলে) বাছা সময়।
+    // দুটো মোডেই একই লেখা — "বৃহস্পতিবার, ২৬ নভেম্বর ২০২৬ · ০৯:২৭ pm"।
+    function updateCalTitle() {
+      if (!calEls) return;
+      var t = validDateStr(calSelected) ? fmtDateFieldFull(calSelected) : '';
+      if (calWithTime && t) t += ' · ' + fmtEntryTime(formTimeMs(calSelected));
+      calEls.title.textContent = t;
+    }
+    function setCalMode(mode) {
+      calMode = mode;
+      if (!calEls) return;
+      var isTime = mode === 'time';
+      calEls.body.hidden = isTime;
+      calEls.clock.hidden = !isTime;
+      calEls.kicker.textContent = isTime ? 'সময় বাছুন' : 'তারিখ বাছুন';
+      calEls.timeBtn.querySelector('span').textContent = isTime ? 'ব্যাক' : 'সময় বাছুন';
+      calEls.bd.setAttribute('aria-label', isTime ? 'সময় বাছুন' : 'তারিখ বাছুন');
+      if (isTime) renderClock(); else renderCalendar();
+    }
+    // ঘড়ির মুখে বাংলা সংখ্যা ১–১২ — একবারই বসে।
+    function buildClockNums() {
+      if (!calEls || calEls.nums.childNodes.length) return;
+      var html = '';
+      for (var n = 1; n <= 12; n++) {
+        var a = n * 30 * Math.PI / 180;
+        var x = 50 + 42 * Math.sin(a), y = 50 - 42 * Math.cos(a);
+        html += '<span class="clock-num" style="left:' + x.toFixed(1) + '%;top:' + y.toFixed(1) + '%">' + fmtNum0.format(n) + '</span>';
+      }
+      calEls.nums.innerHTML = html;
+    }
+    // কাঁটার ঘোরানো: ১২ পেরোলে (যেমন ৫৯ → ০ মিনিট) উল্টো দিকে লম্বা
+    // ঘূর্ণন ঠেকাতে ১৮০°-র বেশি লাফে অ্যানিমেশন একবার বন্ধ রাখা হয়।
+    var clockHandDeg = { h: null, m: null };
+    function setClockHand(el, deg, key) {
+      var prev = clockHandDeg[key];
+      if (prev != null && Math.abs(deg - prev) > 180) el.classList.add('no-anim');
+      el.style.transform = 'translateX(-50%) rotate(' + deg + 'deg)';
+      clockHandDeg[key] = deg;
+      if (el.classList.contains('no-anim')) { void el.offsetWidth; el.classList.remove('no-anim'); }
+    }
+    function renderClock() {
+      if (!calEls) return;
+      ensureFormTime();
+      var h = formTime.h, m = formTime.m;
+      setClockHand(calEls.hourHand, ((h % 12) * 30) + (m * 0.5), 'h');
+      setClockHand(calEls.minHand, m * 6, 'm');
+      calEls.digital.textContent = fmtEntryTime(formTimeMs(calSelected));
+      var h12 = h % 12; if (h12 === 0) h12 = 12;
+      if (document.activeElement !== calEls.hourIn) calEls.hourIn.value = pad2(h12);
+      if (document.activeElement !== calEls.minIn) calEls.minIn.value = pad2(m);
+      var isPm = h >= 12;
+      calEls.apSeg.classList.toggle('pm', isPm);
+      var btns = calEls.apSeg.querySelectorAll('button');
+      btns[0].setAttribute('aria-pressed', isPm ? 'false' : 'true');
+      btns[1].setAttribute('aria-pressed', isPm ? 'true' : 'false');
+      updateCalTitle();
+    }
+    // ঘড়ির মুখে ট্যাপ/ড্র্যাগ: ভেতরের বৃত্ত (ব্যাসার্ধের ৫৫%-এর ভেতর)
+    // ঘণ্টা বদলায়, বাইরের বলয় মিনিট বদলায় — কোণ থেকেই মান ধরা হয়।
+    // ড্র্যাগ চলাকালে শুরুর হাতটাই চলতে থাকে। টাচ ও মাউস দুটোতেই চলে।
+    var clockDrag = null;
+    function clockAngleFromEvent(ev) {
+      var r = calEls.face.getBoundingClientRect();
+      var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      var dx = ev.clientX - cx, dy = ev.clientY - cy;
+      var ang = Math.atan2(dx, -dy) * 180 / Math.PI;
+      if (ang < 0) ang += 360;
+      return { ang: ang, rad: Math.hypot(dx, dy) / (r.width / 2) };
+    }
+    function clockSetFromAngle(ang, mode) {
+      ensureFormTime();
+      if (mode === 'h') {
+        var h12 = Math.round(ang / 30) % 12;
+        formTime.h = (h12 % 12) + (formTime.h >= 12 ? 12 : 0);
+      } else {
+        formTime.m = Math.round(ang / 6) % 60;
+      }
+      renderClock();
+    }
+    function clockApplyInputs() {
+      ensureFormTime();
+      var h12 = parseInt(calEls.hourIn.value, 10);
+      var mn = parseInt(calEls.minIn.value, 10);
+      if (isFinite(h12)) { h12 = Math.max(1, Math.min(12, h12)); formTime.h = (h12 % 12) + (formTime.h >= 12 ? 12 : 0); }
+      if (isFinite(mn)) { formTime.m = Math.max(0, Math.min(59, mn)); }
+      renderClock();
+    }
+    function wireClock() {
+      calEls.face.addEventListener('pointerdown', function (ev) {
+        ev.preventDefault();
+        var p = clockAngleFromEvent(ev);
+        clockDrag = (p.rad < 0.55) ? 'h' : 'm';
+        clockSetFromAngle(p.ang, clockDrag);
+        try { calEls.face.setPointerCapture(ev.pointerId); } catch (e) {}
+      });
+      calEls.face.addEventListener('pointermove', function (ev) {
+        if (!clockDrag) return;
+        clockSetFromAngle(clockAngleFromEvent(ev).ang, clockDrag);
+      });
+      calEls.face.addEventListener('pointerup', function () { clockDrag = null; });
+      calEls.face.addEventListener('pointercancel', function () { clockDrag = null; });
+      calEls.hourIn.addEventListener('change', clockApplyInputs);
+      calEls.minIn.addEventListener('change', clockApplyInputs);
+      calEls.hourIn.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); clockApplyInputs(); calEls.hourIn.blur(); } });
+      calEls.minIn.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); clockApplyInputs(); calEls.minIn.blur(); } });
+      calEls.apSeg.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest ? ev.target.closest('button[data-ap]') : null;
+        if (!b) return;
+        ensureFormTime();
+        var wantPm = b.getAttribute('data-ap') === 'pm';
+        if (wantPm && formTime.h < 12) formTime.h += 12;
+        if (!wantPm && formTime.h >= 12) formTime.h -= 12;
+        renderClock();
+      });
+    }
     document.addEventListener('keydown', function (ev) {
       if (ev.key === 'Escape' && calEls && !calEls.bd.hidden) closeCalendar();
     });
     // একটা টেক্সট ইনপুটকে তারিখের ঘর বানানো: .value-তে ISO
     // তারিখ থাকে, পর্দায় বাংলা রূপ দেখায়, চাপলেই ক্যালেন্ডার।
-    function makeDateField(el, initialIso) {
+    function makeDateField(el, initialIso, withTime) {
       var nativeDesc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
       var iso = validDateStr(initialIso) ? initialIso : todayStr();
+      el._withTime = !!withTime;
       el.setAttribute('readonly', '');
       el.classList.add('date-field');
       el.setAttribute('autocomplete', 'off');
-      function paint() { nativeDesc.set.call(el, iso ? fmtDateFieldText(iso) : ''); }
+      // ম্যানুয়াল ঘরে তারিখের সঙ্গে বাছা সময়ও দেখায়
+      // ("২৬ নভেম্বর ২০২৬ · ০৯:২৭ pm"); ধার/ভয়েসের ঘরে শুধু তারিখ।
+      function paint() {
+        var txt = iso ? fmtDateFieldText(iso) : '';
+        if (txt && el._withTime) { ensureFormTime(); txt += ' · ' + fmtEntryTime(formTimeMs(iso)); }
+        nativeDesc.set.call(el, txt);
+      }
       Object.defineProperty(el, 'value', {
         configurable: true,
         get: function () { return iso; },
@@ -5976,7 +6222,7 @@
       });
       return el;
     }
-    if (els.dateInput) makeDateField(els.dateInput, todayStr());
+    if (els.dateInput) makeDateField(els.dateInput, todayStr(), true);
 
     /* ============================================================
        পিডিএফ প্রতিবেদন
