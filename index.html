@@ -2110,6 +2110,23 @@
       var h12 = h % 12; if (h12 === 0) h12 = 12;
       return toBnDigits(pad2(h12) + ':' + pad2(m)) + ' ' + ap;
     }
+    // সাজানোর সময় (v100): এন্ট্রির তারিখ + createdAt-এর দিনের সময়
+    // (ঘণ্টা:মিনিট:সেকেন্ড) — যাতে পরে অ্যাড করা ব্যাক-ডেটেড এন্ট্রিও
+    // তারিখ+সময় অনুযায়ী ঠিক জায়গায় বসে, যোগের ক্রমে নয়।
+    // createdAt না থাকলে (v93-এর আগের এন্ট্রি) তারিখের ০০:০০।
+    // createdAt সরাসরি নয় — ভয়েস এন্ট্রির ক্ষেত্রে createdAt আজকের
+    // হতে পারে, কিন্তু এন্ট্রিটা গতকালের (তার date অনুযায়ী)।
+    function entryTime(e) {
+      var d = parseDateLocal(e.date);
+      var base = d.getTime();
+      if (!isFinite(base)) return 0;
+      var ms = Math.round(+e.createdAt);
+      if (isFinite(ms) && ms > 0) {
+        var t = new Date(ms);
+        if (!isNaN(t.getTime())) d.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
+      }
+      return d.getTime();
+    }
     // মেটা লাইনের তারিখ+সময়: পুরো তারিখের ক্ষেত্রে তারিখ (আর সময়
     // থাকলে তারিখ+সময়) একসঙ্গে অটুট থাকে — লাইন ভাঙলে পুরোটা নিচের
     // লাইনে নামে, তারিখ মাঝখানে ভাঙে না ("১২ নভেম্বর",
@@ -4047,7 +4064,7 @@
         });
         els.periodModalBody.innerHTML = html;
       }
-      var sorted = list.slice().sort(function (a, b) { return a.date === b.date ? b.id - a.id : (a.date < b.date ? 1 : -1); });
+      var sorted = list.slice().sort(function (a, b) { var d = entryTime(b) - entryTime(a); return d !== 0 ? d : b.id - a.id; });
       if (sorted.length === 0) {
         els.periodModalEntries.innerHTML = catHtml;
       } else {
@@ -4171,7 +4188,7 @@
         }
         return true;
       });
-      list.sort(function (a, b) { return a.date === b.date ? b.id - a.id : (a.date < b.date ? 1 : -1); });
+      list.sort(function (a, b) { var d = entryTime(b) - entryTime(a); return d !== 0 ? d : b.id - a.id; });
       return list;
     }
 
@@ -6293,7 +6310,7 @@
     function generateMonthlyPdf() {
       var ym = state.selectedMonth;
       var list = filterBy(state.entries, function (e) { return monthOf(e.date) === ym; })
-        .sort(function (a, b) { return a.date === b.date ? a.id - b.id : (a.date < b.date ? -1 : 1); });
+        .sort(function (a, b) { var d = entryTime(a) - entryTime(b); return d !== 0 ? d : a.id - b.id; });
       var inc = sumEntries(list, 'income'), exp = sumEntries(list, 'expense');
       var days = elapsedDaysInMonth(ym);
       var avg = days > 0 ? Math.round(exp / days) : 0;
