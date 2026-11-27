@@ -275,6 +275,36 @@
       .balance-chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 12px; padding: 10px 16px; min-width: 128px; }
       .balance-chip .c-lbl { font-size: 13px; opacity: .85; }
       .balance-chip .c-val { font-size: 20px; font-weight: 700; }
+
+      /* ---------- ব্যালেন্স ফরওয়ার্ড (v101) ----------
+         মাসের ১ তারিখে ব্যালান্স কার্ড উল্টে গিয়ে আগের মাসের
+         অবশিষ্ট ব্যালান্স দেখায়। ফ্লিপের কাঠামো: .bf-flip-ই
+         গ্রিডের আইটেম (span 12) — ভেতরের সামনের মুখটাই (আসল
+         ব্যালান্স কার্ড) কাঠামোর উচ্চতা ঠিক করে, পেছনের মুখটা
+         absolute inset:0 বলে কাঠামোর মাপ কখনো বদলাতে পারে না। */
+      .bf-flip { grid-column: span 12; perspective: 1200px; }
+      .bf-flip-inner { position: relative; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.45, 0, .2, 1); }
+      .bf-flip.flipped .bf-flip-inner { transform: rotateY(180deg); }
+      .bf-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+      .bf-face-back { transform: rotateY(180deg); }
+      .bf-forward {
+        position: absolute; inset: 0;
+        background: #1e40af; color: #fff; border-radius: 16px; box-shadow: var(--shadow-md);
+        padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px;
+      }
+      .bf-forward[hidden] { display: none; }
+      @media (prefers-color-scheme: dark) { .bf-forward { background: #2563eb; } }
+      .bf-fwd-title { font-size: 16px; font-weight: 700; }
+      .bf-fwd-sub { font-size: 13px; opacity: .85; margin-top: 2px; }
+      .bf-fwd-amt { font-size: 30px; font-weight: 700; line-height: 1.15; margin-top: 2px; }
+      .bf-fwd-q { font-size: 14px; font-weight: 600; }
+      .bf-fwd-btns { display: flex; gap: 8px; margin-top: 8px; }
+      .bf-btn { min-height: 38px; padding: 8px 20px; border-radius: 999px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border: 1px solid transparent; }
+      .bf-btn-yes { background: #fff; color: #1e40af; }
+      .bf-btn-no { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.45); color: #fff; }
+      @media (prefers-color-scheme: dark) { .bf-btn-yes { color: #1d4ed8; } }
+      @media (max-width: 640px) { .bf-forward { padding: 16px; } }
+      @media (prefers-reduced-motion: reduce) { .bf-flip-inner { transition: none; } }
       .stat { grid-column: span 6; padding: 16px 18px; }
       @media (min-width: 760px) { .stat { grid-column: span 3; } }
       .stat .s-lbl { font-size: 14px; color: var(--ink-2); font-weight: 500; display: flex; align-items: center; gap: 7px; }
@@ -1512,7 +1542,9 @@
 
       <!-- Summary -->
       <section class="summary" aria-label="সারসংক্ষেপ">
-        <div class="balance-card">
+        <div class="bf-flip" id="bfFlip">
+          <div class="bf-flip-inner">
+        <div class="balance-card bf-face">
           <div>
             <div class="lbl"><svg class="lbl-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>মোট ব্যালান্স (সব সময়ের)</div>
             <div class="big" id="balanceVal">৳ ০</div>
@@ -1520,6 +1552,22 @@
           <div class="balance-side">
             <div class="balance-chip"><div class="c-lbl"><svg class="c-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>মোট জমা</div><div class="c-val" id="totalIncomeVal">৳ ০</div></div>
             <div class="balance-chip"><div class="c-lbl"><svg class="c-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10"/><path d="M17 8v9H8"/></svg>মোট খরচ</div><div class="c-val" id="totalExpenseVal">৳ ০</div></div>
+          </div>
+        </div>
+            <div class="bf-forward bf-face bf-face-back" id="bfForward" hidden>
+              <div class="bf-fwd-left">
+                <div class="bf-fwd-title">নতুন মাস শুরু হয়েছে</div>
+                <div class="bf-fwd-sub" id="bfPrevLabel">নভেম্বরের অবশিষ্ট ব্যালান্স</div>
+                <div class="bf-fwd-amt" id="bfAmount">৳ ০</div>
+              </div>
+              <div class="bf-fwd-right">
+                <div class="bf-fwd-q">নতুন মাসে ব্যালেন্স ফরওয়ার্ড করুন</div>
+                <div class="bf-fwd-btns">
+                  <button type="button" class="bf-btn bf-btn-yes" id="bfYesBtn">হ্যাঁ</button>
+                  <button type="button" class="bf-btn bf-btn-no" id="bfNoBtn">না</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <button class="card stat stat-btn" type="button" id="statToday" aria-haspopup="dialog">
@@ -2176,6 +2224,7 @@
     function $(id) { return document.getElementById(id); }
     var els = {};
     ['todayLine', 'monthInput', 'monthPrevBtn', 'monthNextBtn', 'pdfBtn', 'balanceVal', 'totalIncomeVal', 'totalExpenseVal',
+     'bfFlip', 'bfForward', 'bfPrevLabel', 'bfAmount', 'bfYesBtn', 'bfNoBtn',
      'todayExpenseVal', 'todayIncomeLine', 'weekExpenseVal', 'weekIncomeLine', 'monthExpenseLbl', 'monthExpenseVal',
      'statToday', 'statWeek', 'statMonth', 'statAvg', 'avgExcludeModal', 'avgExcludeClose', 'avgExcludeList',
      'avgExcludeSummary', 'avgExcludeAvgVal', 'avgExcludeClearBtn',
@@ -3502,6 +3551,7 @@
       // না দিলে এখনকার সময় — ভয়েস ও ধারের লিংক এন্ট্রি আগের মতোই।
       var ca = Math.round(+data.createdAt);
       var e = { id: state.nextId++, type: data.type, poisha: data.poisha, category: data.category, desc: data.desc || data.category, date: data.date || todayStr(), createdAt: (isFinite(ca) && ca > 0) ? ca : Date.now() };
+      if (data.bf === true) e.bf = true;
       state.entries.push(e);
       markChanged();
       renderAll();
@@ -3523,7 +3573,11 @@
        ============================================================ */
     function renderSummary() {
       var all = state.entries;
-      var inc = sumEntries(all, 'income'), exp = sumEntries(all, 'expense');
+      // v101: Balance Forward এন্ট্রি (bf) সব সময়ের মোটে ধরা হয় না —
+      // ওটা আগের মাসের টাকাই, নতুন টাকা নয়; ধরলে ব্যালান্স দুবার
+      // গোনা হতো। আজ/সপ্তাহ/মাসের হিসাবে bf এন্ট্রি আগের মতোই ধরা হয়।
+      var allNoBf = filterBy(all, function (e) { return !e.bf; });
+      var inc = sumEntries(allNoBf, 'income'), exp = sumEntries(allNoBf, 'expense');
       var balTxt = fmtMoney(inc - exp);
       if (els.balanceVal.textContent !== balTxt) {
         els.balanceVal.textContent = balTxt;
@@ -3565,6 +3619,104 @@
         : 'আজ মাসের শেষ দিন';
       els.budgetMonthLbl.textContent = monthLabel(ym);
     }
+
+    /* ============================================================
+       ব্যালেন্স ফরওয়ার্ড (v101)
+       প্রতি মাসের ১ তারিখে (রাত ১২টার পর) ব্যালান্স কার্ডটা উল্টে
+       গিয়ে আগের মাসের অবশিষ্ট ব্যালান্স দেখায় — হ্যাঁ চাপলে সেই
+       টাকাটা নতুন মাসের জমা হিসেবে ঢোকে (Balance Forward), না
+       চাপলে কিছুই হয় না। মাসে একবারই দেখায়; ১ তারিখে অ্যাপ না
+       খুললে ওই মাসে আর দেখায় না।
+       হিসাবের নিয়ম: ফরওয়ার্ডের টাকা নতুন টাকা নয় — আগের মাসের
+       টাকাই। তাই ফরওয়ার্ড এন্ট্রি (bf) আজ/সপ্তাহ/মাসের হিসাবে
+       ধরা হয়, কিন্তু সব সময়ের মোট ব্যালান্সে ধরা হয় না —
+       নইলে টাকাটা দুবার গোনা হতো (renderSummary-তে বাদ)।
+       ============================================================ */
+    var BF_DECISION_PREFIX = 'khorochpotro_bf_';
+    var BF_MONTH_GENITIVE = ['জানুয়ারির', 'ফেব্রুয়ারির', 'মার্চের', 'এপ্রিলের', 'মে মাসের', 'জুনের', 'জুলাইয়ের', 'আগস্টের', 'সেপ্টেম্বরের', 'অক্টোবরের', 'নভেম্বরের', 'ডিসেম্বরের'];
+    function bfDemoMode() { return typeof window !== 'undefined' && window.__BF_DEMO__ === true; }
+    // ডেমোতে আসল তারিখ যাই হোক, "আজ" ধরা হয় পরের মাসের ১ তারিখ
+    function bfToday() {
+      var d = new Date();
+      if (bfDemoMode()) return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      return d;
+    }
+    function bfGetDecision(ym) {
+      try { var v = localStorage.getItem(BF_DECISION_PREFIX + ym); return (v === 'yes' || v === 'no') ? v : null; } catch (e) { return null; }
+    }
+    function bfSetDecision(ym, v) {
+      try { localStorage.setItem(BF_DECISION_PREFIX + ym, v); } catch (e) {}
+    }
+    // আগের মাসের শেষ অবশিষ্ট ব্যালান্স — আগের মাসের শেষ দিন পর্যন্ত
+    // সব এন্ট্রির জমা − খরচ; ফরওয়ার্ড এন্ট্রি (bf) বাদ — নইলে আগের
+    // মাসের টাকা দুবার গোনা হতো। তারিখের সীমা থাকায় ১ তারিখে নতুন
+    // এন্ট্রি যোগ হলেও এই অঙ্কটা সারাদিন একই থাকে।
+    function bfClosingBalance(prevYm) {
+      var cutoff = prevYm + '-' + pad2(daysInMonth(prevYm));
+      var list = filterBy(state.entries, function (e) { return e.date <= cutoff && !e.bf; });
+      return sumEntries(list, 'income') - sumEntries(list, 'expense');
+    }
+    function bfPrevLabel(prevYm) {
+      var p = String(prevYm).split('-');
+      return BF_MONTH_GENITIVE[(+p[1]) - 1] + ' অবশিষ্ট ব্যালান্স';
+    }
+    function bfEligibility() {
+      var today = bfToday();
+      if (today.getDate() !== 1) return { ok: false };
+      var ym = today.getFullYear() + '-' + pad2(today.getMonth() + 1);
+      if (bfGetDecision(ym)) return { ok: false };
+      var prevYm = shiftMonth(ym, -1);
+      var amount = bfClosingBalance(prevYm);
+      if (!(amount > 0)) return { ok: false };
+      // অন্য ডিভাইসে হ্যাঁ চাপা হয়ে থাকলে (সিঙ্কে এন্ট্রি এসেছে) আর জিজ্ঞেস নয়
+      var hasForward = state.entries.some(function (e) { return e.bf === true && monthOf(e.date) === ym; });
+      if (hasForward) return { ok: false };
+      return { ok: true, ym: ym, prevYm: prevYm, amount: amount };
+    }
+    var bfShown = false;
+    var bfFlipTimer = null;
+    function bfSetTile(info) {
+      els.bfPrevLabel.textContent = bfPrevLabel(info.prevYm);
+      els.bfAmount.textContent = fmtMoney(info.amount);
+    }
+    function bfFlipBack() {
+      if (!els.bfFlip) return;
+      els.bfFlip.classList.remove('flipped');
+      bfShown = false;
+      setTimeout(function () { if (!bfShown && els.bfForward) els.bfForward.hidden = true; }, 650);
+    }
+    function bfCheck() {
+      if (!els.bfFlip || !els.bfForward) return;
+      var info = bfEligibility();
+      if (!info.ok) { if (bfShown) bfFlipBack(); return; }
+      if (bfShown || bfFlipTimer) return;
+      bfSetTile(info);
+      els.bfForward.hidden = false;
+      // ব্যালান্স মুখটা আগে দেখিয়ে তারপর উল্টানো — ফ্লিপটা চোখে পড়ে
+      bfFlipTimer = setTimeout(function () {
+        bfFlipTimer = null;
+        var again = bfEligibility();
+        if (!again.ok) return;
+        bfSetTile(again);
+        els.bfFlip.classList.add('flipped');
+        bfShown = true;
+      }, 600);
+    }
+    function bfAnswerYes() {
+      var info = bfEligibility();
+      if (!info.ok) { bfFlipBack(); return; }
+      bfSetDecision(info.ym, 'yes');
+      addEntry({ type: 'income', poisha: info.amount, category: 'অন্যান্য', desc: 'Balance Forward', date: info.ym + '-01', createdAt: Date.now(), bf: true });
+      bfFlipBack();
+      showToast('Balance Forward যোগ হয়েছে');
+    }
+    function bfAnswerNo() {
+      var info = bfEligibility();
+      if (info.ok) bfSetDecision(info.ym, 'no');
+      bfFlipBack();
+    }
+    if (els.bfYesBtn) els.bfYesBtn.addEventListener('click', bfAnswerYes);
+    if (els.bfNoBtn) els.bfNoBtn.addEventListener('click', bfAnswerNo);
 
     /* ---------- গড় দৈনিক খরচ থেকে ক্যাটাগরি বাদ (v79) ----------
        বাদ দেওয়া ক্যাটাগরি শুধু গড়ের অঙ্কেই ধরা হয় না — মাসের মোট,
@@ -4264,7 +4416,7 @@
     /* ফন্ট লোড শেষে সারির উচ্চতা বদলাতে পারে — তখন আবার মেপে নেওয়া */
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitEntryList);
 
-    function renderAll() { buildMonthOptions(); renderSummary(); renderBudget(); renderList(); renderDaily(); updateMonthStepper(); renderTimeToggle(); renderLending(); }
+    function renderAll() { buildMonthOptions(); renderSummary(); renderBudget(); renderList(); renderDaily(); updateMonthStepper(); renderTimeToggle(); renderLending(); bfCheck(); }
     /* ============================================================
        ধার দেনা (v95) — আলাদা খতিয়ান: ধার দেওয়া খরচ নয়, ফেরত
        জমাও নয়। state.entries আর ব্যালান্সে এর কোনো প্রভাব নেই —
@@ -6841,6 +6993,7 @@
         var entry = { id: id, type: e.type, poisha: poisha, category: cat, desc: String(e.desc || cat).slice(0, 120), date: date };
         var createdAt = Math.round(+e.createdAt);
         if (isFinite(createdAt) && createdAt > 0) entry.createdAt = createdAt;
+        if (e.bf === true) entry.bf = true;
         out.push(entry);
       });
       var budgets = {};
@@ -7067,6 +7220,7 @@
       list.forEach(function (e) {
         var s = { id: e.id, type: e.type, poisha: e.poisha, category: e.category, desc: e.desc, date: e.date };
         if (e.createdAt) s.createdAt = e.createdAt;
+        if (e.bf) s.bf = true;
         m[e.id] = s;
       });
       return m;
@@ -7092,7 +7246,7 @@
       for (var i = 0; i < clean.entries.length; i++) {
         var re = clean.entries[i], b = syncMeta.baseEntries[re.id];
         if (!b || b.type !== re.type || b.poisha !== re.poisha || b.date !== re.date ||
-            b.category !== re.category || b.desc !== re.desc) return false;
+            b.category !== re.category || b.desc !== re.desc || !!b.bf !== !!re.bf) return false;
       }
       var bk = Object.keys(syncMeta.baseBudgets), ck = Object.keys(clean.budgets);
       if (bk.length !== ck.length) return false;
@@ -7171,21 +7325,23 @@
             // থাকবে।
             if ((remote.updatedAt || '') > (syncMeta.updatedAt || '') &&
                 (localE.type !== re.type || localE.poisha !== re.poisha || localE.date !== re.date ||
-                 localE.category !== re.category || localE.desc !== re.desc)) {
+                 localE.category !== re.category || localE.desc !== re.desc || !!localE.bf !== !!re.bf)) {
               localE.type = re.type; localE.poisha = re.poisha; localE.date = re.date;
               localE.category = re.category; localE.desc = re.desc;
+              if (re.bf) localE.bf = true; else delete localE.bf;
               changed = true;
             }
             return;
           }
           var remoteChanged = re.type !== baseE.type || re.poisha !== baseE.poisha || re.date !== baseE.date ||
-                              re.category !== baseE.category || re.desc !== baseE.desc;
+                              re.category !== baseE.category || re.desc !== baseE.desc || !!re.bf !== !!baseE.bf;
           if (!remoteChanged) return;
           var localChanged = localE.type !== baseE.type || localE.poisha !== baseE.poisha || localE.date !== baseE.date ||
-                             localE.category !== baseE.category || localE.desc !== baseE.desc;
+                             localE.category !== baseE.category || localE.desc !== baseE.desc || !!localE.bf !== !!baseE.bf;
           if (localChanged) return;
           localE.type = re.type; localE.poisha = re.poisha; localE.date = re.date;
           localE.category = re.category; localE.desc = re.desc;
+          if (re.bf) localE.bf = true; else delete localE.bf;
           changed = true;
           return;
         }
